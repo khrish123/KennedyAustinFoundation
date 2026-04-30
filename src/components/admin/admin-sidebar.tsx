@@ -13,6 +13,7 @@ import {
   Settings,
   MessageSquare,
   Image,
+  Calendar,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -33,6 +34,11 @@ const navigation = [
     name: "Classes",
     href: "/admin/classes",
     icon: BookOpen,
+  },
+  {
+    name: "Events",
+    href: "/admin/events",
+    icon: Calendar,
   },
   {
     name: "Content",

@@ -3,6 +3,11 @@ import { Heart, Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } fro
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { DEFAULT_SITE_SETTINGS, type SiteSettings } from "@/types/settings"
+
+interface FooterProps {
+  settings?: SiteSettings
+}
 
 const footerLinks = {
   services: [
@@ -35,75 +40,107 @@ const footerLinks = {
   ],
 }
 
-const socialLinks = [
-  { name: "Facebook", href: "https://facebook.com", icon: Facebook },
-  { name: "Instagram", href: "https://instagram.com", icon: Instagram },
-  { name: "Twitter", href: "https://twitter.com", icon: Twitter },
-  { name: "YouTube", href: "https://youtube.com", icon: Youtube },
-]
+export function Footer({ settings = DEFAULT_SITE_SETTINGS }: FooterProps = {}) {
 
-export function Footer() {
+  const siteName = settings.site_name || "Kennedy Austin Foundation"
+  const nameParts = siteName.split(/\s+/)
+  const nameLine1 = nameParts.slice(0, Math.max(1, nameParts.length - 1)).join(" ") || siteName
+  const nameLine2 = nameParts.length > 1 ? nameParts[nameParts.length - 1] : ""
+
+  const socialLinks = [
+    { name: "Facebook", href: settings.facebook_url, icon: Facebook },
+    { name: "Instagram", href: settings.instagram_url, icon: Instagram },
+    { name: "Twitter", href: settings.twitter_url, icon: Twitter },
+    { name: "YouTube", href: settings.youtube_url, icon: Youtube },
+  ].filter((s) => !!s.href)
+
+  const year = new Date().getFullYear()
+  const copyright =
+    settings.copyright_text || `© ${year} ${siteName}. All rights reserved.`
+
   return (
     <footer className="bg-slate-50 border-t border-slate-200">
-      {/* Newsletter Section */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-700">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-white">Stay Connected</h3>
-              <p className="text-sm text-white/95">Subscribe to our newsletter for updates, resources, and inspiration on your healing journey.</p>
+      {settings.newsletter_blurb && (
+        <div className="bg-gradient-to-r from-teal-600 to-teal-700">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Stay Connected</h3>
+                <p className="text-sm text-white/95">{settings.newsletter_blurb}</p>
+              </div>
+              <form className="flex w-full max-w-md gap-2">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="bg-white border-white text-slate-900 placeholder:text-slate-500"
+                />
+                <Button
+                  variant="secondary"
+                  type="submit"
+                  className="bg-white text-teal-700 hover:bg-slate-100 shadow-warm font-semibold"
+                >
+                  Subscribe
+                </Button>
+              </form>
             </div>
-            <form className="flex w-full max-w-md gap-2">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="bg-white border-white text-slate-900 placeholder:text-slate-500"
-              />
-              <Button variant="secondary" type="submit" className="bg-white text-teal-700 hover:bg-slate-100 shadow-warm font-semibold">
-                Subscribe
-              </Button>
-            </form>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Main Footer Content */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-          {/* Logo and Contact */}
           <div className="col-span-2 md:col-span-3 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-teal-700 shadow-warm">
-                <Heart className="h-5 w-5 text-white" />
-              </div>
+              {settings.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={settings.logo_url} alt={siteName} className="h-10 w-auto" />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-teal-700 shadow-warm">
+                  <Heart className="h-5 w-5 text-white" />
+                </div>
+              )}
               <div>
-                <span className="text-lg font-bold text-slate-900">Kennedy Austin</span>
-                <span className="block text-xs text-slate-600">Foundation</span>
+                <span className="text-lg font-bold text-slate-900">{nameLine1}</span>
+                {nameLine2 && (
+                  <span className="block text-xs text-slate-600">{nameLine2}</span>
+                )}
               </div>
             </Link>
-            <p className="text-sm text-slate-700 mb-4">
-              Supporting youth and families through the traumas of life and loss since 1993.
-              A family crisis intervention center serving Pomona, Claremont, and La Verna, California.
-            </p>
+            {settings.footer_about && (
+              <p className="text-sm text-slate-700 mb-4">{settings.footer_about}</p>
+            )}
             <div className="space-y-2 text-sm text-slate-700">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-teal-700" />
-                <a href="tel:909-808-6866" className="hover:text-teal-700 font-medium">909-808-6866</a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-teal-700" />
-                <a href="mailto:admin@kennedyaustinfoundation.com" className="hover:text-teal-700">
-                  admin@kennedyaustinfoundation.com
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-teal-700" />
-                <span>Pomona, CA</span>
-              </div>
+              {settings.primary_phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-teal-700" />
+                  <a
+                    href={`tel:${settings.primary_phone.replace(/[^0-9+]/g, "")}`}
+                    className="hover:text-teal-700 font-medium"
+                  >
+                    {settings.primary_phone}
+                  </a>
+                </div>
+              )}
+              {settings.primary_email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-teal-700" />
+                  <a
+                    href={`mailto:${settings.primary_email}`}
+                    className="hover:text-teal-700"
+                  >
+                    {settings.primary_email}
+                  </a>
+                </div>
+              )}
+              {settings.address && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-teal-700" />
+                  <span>{settings.address}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Services Links */}
           <div>
             <h4 className="text-sm font-semibold mb-4 text-slate-900">Services</h4>
             <ul className="space-y-2 text-sm">
@@ -120,7 +157,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Classes Links */}
           <div>
             <h4 className="text-sm font-semibold mb-4 text-slate-900">Classes</h4>
             <ul className="space-y-2 text-sm">
@@ -137,7 +173,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Resources Links */}
           <div>
             <h4 className="text-sm font-semibold mb-4 text-slate-900">Resources</h4>
             <ul className="space-y-2 text-sm">
@@ -154,7 +189,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* About Links */}
           <div>
             <h4 className="text-sm font-semibold mb-4 text-slate-900">About</h4>
             <ul className="space-y-2 text-sm">
@@ -174,13 +208,12 @@ export function Footer() {
 
         <Separator className="my-8 bg-slate-200" />
 
-        {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {socialLinks.map((social) => (
               <a
                 key={social.name}
-                href={social.href}
+                href={social.href!}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-slate-600 hover:text-teal-700 transition-colors"
@@ -192,11 +225,17 @@ export function Footer() {
           </div>
 
           <div className="text-sm text-slate-600 text-center md:text-right">
-            <p>&copy; {new Date().getFullYear()} Kennedy Austin Foundation. All rights reserved.</p>
+            <p>{copyright}</p>
             <div className="flex items-center justify-center md:justify-end gap-4 mt-2">
-              <Link href="/privacy" className="hover:text-teal-700">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-teal-700">Terms of Service</Link>
-              <Link href="/accessibility" className="hover:text-teal-700">Accessibility</Link>
+              <Link href="/privacy" className="hover:text-teal-700">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="hover:text-teal-700">
+                Terms of Service
+              </Link>
+              <Link href="/accessibility" className="hover:text-teal-700">
+                Accessibility
+              </Link>
             </div>
           </div>
         </div>

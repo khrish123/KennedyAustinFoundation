@@ -2,21 +2,22 @@ import { Metadata } from "next"
 import Link from "next/link"
 import {
   Phone, Shield, Heart, FileText, ExternalLink, AlertTriangle,
-  BookOpen, Video, Download, ArrowRight, MessageCircle
+  BookOpen, Video, Download, ArrowRight, MessageCircle, LucideIcon
 } from "lucide-react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { SiteHeader } from "@/components/layout/site-header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { getCrisisResources, getNonCrisisResources } from "@/lib/queries/resources"
+import type { Resource } from "@/types/resource"
 
 export const metadata: Metadata = {
   title: "Resources",
   description: "Crisis hotlines, helpful articles, guides, and external resources for mental health, grief, and domestic violence support.",
 }
 
-const crisisResources = [
+const fallbackCrisisResources = [
   {
     name: "Kennedy Austin Foundation Crisis Line",
     phone: "909-808-6866",
@@ -45,7 +46,7 @@ const crisisResources = [
   },
 ]
 
-const resourceCategories = [
+const fallbackResourceCategories = [
   {
     title: "Grief & Loss",
     icon: Heart,
@@ -198,10 +199,57 @@ function getTypeIcon(type: string) {
   }
 }
 
-export default function ResourcesPage() {
+const CATEGORY_VISUALS: Record<string, { icon: LucideIcon; color: string; bgColor: string }> = {
+  grief: { icon: Heart, color: "text-purple-600", bgColor: "bg-purple-100" },
+  dv: { icon: Shield, color: "text-blue-600", bgColor: "bg-blue-100" },
+  domestic_violence: { icon: Shield, color: "text-blue-600", bgColor: "bg-blue-100" },
+  wellness: { icon: BookOpen, color: "text-emerald-600", bgColor: "bg-emerald-100" },
+  mental_health: { icon: BookOpen, color: "text-emerald-600", bgColor: "bg-emerald-100" },
+  youth: { icon: BookOpen, color: "text-amber-600", bgColor: "bg-amber-100" },
+  self_help: { icon: Heart, color: "text-rose-600", bgColor: "bg-rose-100" },
+  therapy: { icon: BookOpen, color: "text-teal-600", bgColor: "bg-teal-100" },
+}
+
+function categoryVisual(slug: string) {
+  return (
+    CATEGORY_VISUALS[slug] || {
+      icon: BookOpen,
+      color: "text-slate-600",
+      bgColor: "bg-slate-100",
+    }
+  )
+}
+
+function humanizeCategory(slug: string) {
+  return slug
+    .split("_")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(" ")
+}
+
+function groupByCategory(resources: Resource[]) {
+  const map = new Map<string, Resource[]>()
+  for (const r of resources) {
+    const key = r.category || "other"
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(r)
+  }
+  return Array.from(map.entries())
+}
+
+export default async function ResourcesPage() {
+  const [crisisFromDb, nonCrisisFromDb] = await Promise.all([
+    getCrisisResources(),
+    getNonCrisisResources(),
+  ])
+
+  const useDbCrisis = crisisFromDb.length > 0
+  const useDbResources = nonCrisisFromDb.length > 0
+  const groupedDb = useDbResources ? groupByCategory(nonCrisisFromDb) : []
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <SiteHeader />
 
       <main className="flex-1">
         {/* Crisis Banner */}
@@ -255,7 +303,15 @@ export default function ResourcesPage() {
               </p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {crisisResources.map((resource) => (
+              {(useDbCrisis
+                ? crisisFromDb.map((r, i) => ({
+                    name: r.title,
+                    phone: r.phone || r.url || "",
+                    description: r.description || "",
+                    primary: i === 0,
+                  }))
+                : fallbackCrisisResources
+              ).map((resource) => (
                 <Card
                   key={resource.name}
                   className={`shadow-warm hover:shadow-warm-lg transition-all ${resource.primary ? "border-teal-400 bg-teal-50" : "border-slate-200 bg-white"}`}
@@ -293,32 +349,97 @@ export default function ResourcesPage() {
               </p>
             </div>
             <div className="space-y-12">
-              {resourceCategories.map((category) => (
-                <div key={category.title}>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className={`p-3 rounded-xl ${category.bgColor} shadow-warm`}>
-                      <category.icon className={`h-6 w-6 ${category.color}`} />
-                    </div>
-                    <h3 className="text-xl font-semibold text-slate-900">{category.title}</h3>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {category.resources.map((resource) => (
-                      <Card key={resource.title} className="shadow-warm hover:shadow-warm-lg hover-lift transition-all cursor-pointer border border-slate-200 bg-white">
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center gap-2 text-slate-600 mb-2">
-                            {getTypeIcon(resource.type)}
-                            <span className="text-xs uppercase font-medium">{resource.type}</span>
+              {useDbResources
+                ? groupedDb.map(([catSlug, items]) => {
+                    const visual = categoryVisual(catSlug)
+                    const Icon = visual.icon
+                    return (
+                      <div key={catSlug}>
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className={`p-3 rounded-xl ${visual.bgColor} shadow-warm`}>
+                            <Icon className={`h-6 w-6 ${visual.color}`} />
                           </div>
-                          <CardTitle className="text-base text-slate-900">{resource.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <CardDescription className="text-slate-600">{resource.description}</CardDescription>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                          <h3 className="text-xl font-semibold text-slate-900">
+                            {humanizeCategory(catSlug)}
+                          </h3>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                          {items.map((r) => {
+                            const card = (
+                              <Card className="h-full shadow-warm hover:shadow-warm-lg hover-lift transition-all cursor-pointer border border-slate-200 bg-white">
+                                <CardHeader className="pb-2">
+                                  <div className="flex items-center gap-2 text-slate-600 mb-2">
+                                    {getTypeIcon(r.type)}
+                                    <span className="text-xs uppercase font-medium">
+                                      {r.type}
+                                    </span>
+                                  </div>
+                                  <CardTitle className="text-base text-slate-900">
+                                    {r.title}
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <CardDescription className="text-slate-600">
+                                    {r.description}
+                                  </CardDescription>
+                                </CardContent>
+                              </Card>
+                            )
+                            return r.url ? (
+                              <a
+                                key={r.id}
+                                href={r.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block"
+                              >
+                                {card}
+                              </a>
+                            ) : (
+                              <div key={r.id}>{card}</div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })
+                : fallbackResourceCategories.map((category) => (
+                    <div key={category.title}>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className={`p-3 rounded-xl ${category.bgColor} shadow-warm`}>
+                          <category.icon className={`h-6 w-6 ${category.color}`} />
+                        </div>
+                        <h3 className="text-xl font-semibold text-slate-900">
+                          {category.title}
+                        </h3>
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {category.resources.map((resource) => (
+                          <Card
+                            key={resource.title}
+                            className="shadow-warm hover:shadow-warm-lg hover-lift transition-all cursor-pointer border border-slate-200 bg-white"
+                          >
+                            <CardHeader className="pb-2">
+                              <div className="flex items-center gap-2 text-slate-600 mb-2">
+                                {getTypeIcon(resource.type)}
+                                <span className="text-xs uppercase font-medium">
+                                  {resource.type}
+                                </span>
+                              </div>
+                              <CardTitle className="text-base text-slate-900">
+                                {resource.title}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <CardDescription className="text-slate-600">
+                                {resource.description}
+                              </CardDescription>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
             </div>
           </div>
         </section>
@@ -415,7 +536,7 @@ export default function ResourcesPage() {
         </section>
       </main>
 
-      <Footer />
+      <SiteFooter />
     </div>
   )
 }

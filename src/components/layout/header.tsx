@@ -2,7 +2,17 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, X, Heart, Phone, User, LogOut, Settings, BookOpen } from "lucide-react"
+import {
+  Menu,
+  X,
+  Heart,
+  Phone,
+  User,
+  LogOut,
+  Settings,
+  BookOpen,
+  MessageSquare,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,54 +24,95 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn, getInitials } from "@/lib/utils"
+import { DEFAULT_SITE_SETTINGS, type SiteSettings } from "@/types/settings"
+
+export interface HeaderUser {
+  id: string
+  email: string
+  full_name?: string
+  avatar_url?: string
+  role?: string
+}
 
 interface HeaderProps {
-  user?: {
-    id: string
-    email: string
-    full_name?: string
-    avatar_url?: string
-    role?: string
-  } | null
+  user?: HeaderUser | null
+  /** Optional fresh settings. Falls back to DEFAULT_SITE_SETTINGS when omitted. */
+  settings?: SiteSettings
 }
 
 const navigation = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
   { name: "Services", href: "/services" },
+  { name: "ECM", href: "/ecm" },
   { name: "Classes", href: "/classes" },
   { name: "Resources", href: "/resources" },
   { name: "Community", href: "/community" },
   { name: "Contact", href: "/contact" },
 ]
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, settings = DEFAULT_SITE_SETTINGS }: HeaderProps = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const siteName = settings.site_name || "Kennedy Austin Foundation"
+  const nameParts = siteName.split(/\s+/)
+  const nameLine1 =
+    nameParts.slice(0, Math.max(1, nameParts.length - 1)).join(" ") || siteName
+  const nameLine2 = nameParts.length > 1 ? nameParts[nameParts.length - 1] : ""
+
+  const phone = settings.primary_phone
+  const crisis = settings.crisis_line
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
-      {/* Crisis Banner */}
-      <div className="bg-gradient-to-r from-rose-600 to-rose-700 text-white py-1.5 text-center text-sm font-medium">
-        <Phone className="inline h-3 w-3 mr-1" />
-        Need help? Call: <a href="tel:909-808-6866" className="font-bold underline">909-808-6866</a>
-        {" | "}
-        National Lifeline: <a href="tel:988" className="font-bold underline">988</a>
-        {" "}<span className="hidden sm:inline">- You are not alone</span>
-      </div>
+      {(phone || crisis) && (
+        <div className="bg-gradient-to-r from-rose-600 to-rose-700 text-white py-1.5 text-center text-sm font-medium">
+          <Phone className="inline h-3 w-3 mr-1" />
+          {phone && (
+            <>
+              Need help? Call:{" "}
+              <a
+                href={`tel:${phone.replace(/[^0-9+]/g, "")}`}
+                className="font-bold underline"
+              >
+                {phone}
+              </a>
+            </>
+          )}
+          {phone && crisis && " | "}
+          {crisis && (
+            <>
+              National Lifeline:{" "}
+              <a
+                href={`tel:${crisis.replace(/[^0-9+]/g, "")}`}
+                className="font-bold underline"
+              >
+                {crisis}
+              </a>
+            </>
+          )}{" "}
+          <span className="hidden sm:inline">- You are not alone</span>
+        </div>
+      )}
 
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-teal-700 shadow-warm">
-            <Heart className="h-5 w-5 text-white" />
-          </div>
+          {settings.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={settings.logo_url} alt={siteName} className="h-10 w-auto" />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-teal-700 shadow-warm">
+              <Heart className="h-5 w-5 text-white" />
+            </div>
+          )}
           <div className="hidden sm:block">
-            <span className="text-lg font-bold text-slate-900">Kennedy Austin</span>
-            <span className="block text-xs text-slate-600">Foundation</span>
+            <span className="text-lg font-bold text-slate-900">{nameLine1}</span>
+            {nameLine2 && (
+              <span className="block text-xs text-slate-600">{nameLine2}</span>
+            )}
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden lg:flex lg:gap-x-6">
           {navigation.map((item) => (
             <Link
@@ -74,7 +125,6 @@ export function Header({ user }: HeaderProps) {
           ))}
         </div>
 
-        {/* Right Side Actions */}
         <div className="flex items-center gap-3">
           <Button asChild variant="default" size="sm" className="hidden sm:inline-flex">
             <Link href="/donate">
@@ -88,16 +138,25 @@ export function Header({ user }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || user.email} />
-                    <AvatarFallback>{getInitials(user.full_name || user.email)}</AvatarFallback>
+                    <AvatarImage
+                      src={user.avatar_url || undefined}
+                      alt={user.full_name || user.email}
+                    />
+                    <AvatarFallback>
+                      {getInitials(user.full_name || user.email)}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.full_name || "User"}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    <p className="text-sm font-medium leading-none">
+                      {user.full_name || "User"}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -114,12 +173,18 @@ export function Header({ user }: HeaderProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/messages">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    My Messages
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/settings">
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Link>
                 </DropdownMenuItem>
-                {user.role && ['admin', 'super_admin'].includes(user.role) && (
+                {user.role && ["admin", "super_admin"].includes(user.role) && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
@@ -150,29 +215,18 @@ export function Header({ user }: HeaderProps) {
             </div>
           )}
 
-          {/* Mobile menu button */}
           <Button
             variant="ghost"
             size="icon"
             className="lg:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
       </nav>
 
-      {/* Mobile Navigation */}
-      <div
-        className={cn(
-          "lg:hidden",
-          mobileMenuOpen ? "block" : "hidden"
-        )}
-      >
+      <div className={cn("lg:hidden", mobileMenuOpen ? "block" : "hidden")}>
         <div className="space-y-1 px-4 pb-4 bg-white border-t border-slate-100">
           {navigation.map((item) => (
             <Link

@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import {
   MessageSquare, Search, MoreHorizontal, Phone, Mail, Eye,
@@ -270,40 +271,12 @@ export default async function AdminSupportPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Full Message
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send Email
-                          </DropdownMenuItem>
-                          {request.phone && (
-                            <DropdownMenuItem>
-                              <Phone className="mr-2 h-4 w-4" />
-                              Call
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Clock className="mr-2 h-4 w-4" />
-                            Mark In Progress
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Mark Resolved
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/admin/support/${request.id}`}>
+                          <Eye className="mr-2 h-3.5 w-3.5" />
+                          Open
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

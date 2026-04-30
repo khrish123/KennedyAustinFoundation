@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { DailyInspiration } from "@/components/dashboard/daily-inspiration"
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -28,16 +29,6 @@ export default async function DashboardPage() {
     .from("profiles")
     .select("*")
     .eq("id", user?.id)
-    .single()
-
-  // Get daily inspiration
-  const { data: inspiration } = await supabase
-    .from("daily_inspirations")
-    .select("*")
-    .eq("is_active", true)
-    .eq("language", profile?.language_preference || "en")
-    .order("generated_at", { ascending: false })
-    .limit(1)
     .single()
 
   // Get enrolled classes count
@@ -112,21 +103,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Daily Inspiration */}
-      {inspiration && (
-        <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10 border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <div className="p-2 rounded-full bg-primary/20">
-                <Sparkles className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-primary mb-1">Daily Inspiration</p>
-                <p className="text-lg italic">&ldquo;{inspiration.content}&rdquo;</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <DailyInspiration />
 
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-3">

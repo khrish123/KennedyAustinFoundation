@@ -6,8 +6,8 @@ import {
   Calendar, Clock, MapPin, Users, ArrowLeft, Share2,
   CalendarPlus, CheckCircle
 } from "lucide-react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { SiteHeader } from "@/components/layout/site-header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -204,7 +204,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <SiteHeader />
 
       <main className="flex-1">
         {/* Breadcrumb */}
@@ -386,7 +386,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         </section>
       </main>
 
-      <Footer />
+      <SiteFooter />
     </div>
   )
 }

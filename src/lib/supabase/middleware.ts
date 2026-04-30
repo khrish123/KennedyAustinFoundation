@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes
-  const protectedPaths = ['/dashboard', '/admin', '/settings', '/journal', '/my-classes', '/progress', '/community']
+  const protectedPaths = ['/dashboard', '/admin', '/settings', '/journal', '/my-classes', '/progress', '/community', '/messages']
   const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
   // Admin-only routes

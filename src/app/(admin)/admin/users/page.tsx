@@ -1,12 +1,12 @@
 import { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import {
-  Users, Search, MoreHorizontal, Mail, Shield, UserCheck, UserX,
+  Users, Search, Mail,
   ChevronLeft, ChevronRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -16,14 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { RoleControl } from "./role-control"
 
 export const metadata: Metadata = {
   title: "User Management | Admin",
@@ -52,6 +45,19 @@ function formatDate(dateString: string) {
 
 export default async function AdminUsersPage() {
   const supabase = await createClient()
+
+  // Identify the viewing admin (for self-lock + role-grant gating)
+  const {
+    data: { user: viewer },
+  } = await supabase.auth.getUser()
+  const { data: viewerProfile } = viewer
+    ? await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", viewer.id)
+        .maybeSingle()
+    : { data: null }
+  const viewerRole = viewerProfile?.role || "user"
 
   // Fetch users with their profiles
   const { data: users, count } = await supabase
@@ -187,34 +193,12 @@ export default async function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <UserCheck className="mr-2 h-4 w-4" />
-                            View Profile
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Shield className="mr-2 h-4 w-4" />
-                            Change Role
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send Email
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-500">
-                            <UserX className="mr-2 h-4 w-4" />
-                            Suspend User
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <RoleControl
+                        userId={user.id}
+                        currentRole={user.role}
+                        isSelf={viewer?.id === user.id}
+                        viewerRole={viewerRole}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

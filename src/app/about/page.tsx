@@ -1,77 +1,27 @@
 import { Metadata } from "next"
 import Link from "next/link"
-import { Heart, Award, Users, Target, Calendar, ArrowRight } from "lucide-react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { Heart, Award, Calendar, ArrowRight } from "lucide-react"
+import { SiteHeader } from "@/components/layout/site-header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { getPublishedValues, getPublishedMilestones } from "@/lib/queries/cms"
+import { getIcon } from "@/lib/icon-registry"
 
 export const metadata: Metadata = {
   title: "About Us",
   description: "Learn about the Kennedy Austin Foundation's mission, history, and the team dedicated to supporting families through crisis.",
 }
 
-const values = [
-  {
-    icon: Heart,
-    title: "Compassion",
-    description: "We meet everyone with empathy and understanding, recognizing that healing is a personal journey.",
-  },
-  {
-    icon: Users,
-    title: "Community",
-    description: "We believe in the power of connection and support from those who understand your experience.",
-  },
-  {
-    icon: Target,
-    title: "Accessibility",
-    description: "Our core services are free because we believe everyone deserves access to support.",
-  },
-  {
-    icon: Award,
-    title: "Excellence",
-    description: "We are committed to providing the highest quality support and resources to our community.",
-  },
-]
-
-const milestones = [
-  {
-    year: "1993",
-    title: "Foundation Established",
-    description: "Ms. Ethel Gardner founded the Kennedy Austin Foundation after losing her teenage son.",
-  },
-  {
-    year: "2004",
-    title: "Published 'A Mother's Cry'",
-    description: "Ms. Gardner authored her book, sharing her journey and helping others through grief.",
-  },
-  {
-    year: "2010",
-    title: "Partnered with Tri-City Mental Health",
-    description: "Expanded grief counseling services through strategic partnership.",
-  },
-  {
-    year: "2015",
-    title: "California Woman of the Year",
-    description: "Ms. Ethel Gardner was recognized for her outstanding service to the community.",
-  },
-  {
-    year: "2020",
-    title: "Virtual Services Launch",
-    description: "Expanded reach with online classes and virtual support groups.",
-  },
-  {
-    year: "2024",
-    title: "AI Support Initiative",
-    description: "Launched 24/7 AI-powered support to complement our human services.",
-  },
-]
-
-export default function AboutPage() {
+export default async function AboutPage() {
+  const [values, milestones] = await Promise.all([
+    getPublishedValues(),
+    getPublishedMilestones(),
+  ])
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <SiteHeader />
 
       <main className="flex-1">
         {/* Hero Section */}
@@ -164,21 +114,26 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {values.map((value) => (
-                <Card key={value.title} className="text-center">
-                  <CardHeader>
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                      <value.icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <CardTitle>{value.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{value.description}</CardDescription>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {values.length > 0 && (
+              <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                {values.map((value) => {
+                  const Icon = getIcon(value.icon_name, Heart)
+                  return (
+                    <Card key={value.id} className="text-center">
+                      <CardHeader>
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                          <Icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle>{value.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription>{value.description}</CardDescription>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </section>
 
@@ -197,7 +152,7 @@ export default function AboutPage() {
               <div className="space-y-8">
                 {milestones.map((milestone, index) => (
                   <div
-                    key={milestone.year}
+                    key={milestone.id}
                     className={`relative flex items-center gap-4 md:gap-8 ${
                       index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
                     }`}
@@ -285,7 +240,7 @@ export default function AboutPage() {
         </section>
       </main>
 
-      <Footer />
+      <SiteFooter />
     </div>
   )
 }

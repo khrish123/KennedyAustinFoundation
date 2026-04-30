@@ -14,11 +14,16 @@ import {
   Leaf,
   HandHeart
 } from "lucide-react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { SiteHeader } from "@/components/layout/site-header"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { HeroSlider } from "@/components/home/hero-slider"
+import { UpcomingEvents } from "@/components/home/upcoming-events"
+import { getActiveHeroSlides, getUpcomingEvents } from "@/lib/queries/home"
+import { getPublishedServices } from "@/lib/queries/cms"
+import { getIcon } from "@/lib/icon-registry"
 
 const services = [
   {
@@ -102,60 +107,21 @@ const upcomingClasses = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [slides, upcomingEvents, dbServices] = await Promise.all([
+    getActiveHeroSlides(),
+    getUpcomingEvents(3),
+    getPublishedServices(),
+  ])
+
+  const homepageServices = dbServices.length > 0 ? dbServices : null
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Header />
+      <SiteHeader />
 
       <main className="flex-1">
-        {/* Hero Section - Warm and Inviting */}
-        <section className="relative overflow-hidden gradient-sunrise">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/60" />
-          <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-            <div className="max-w-3xl">
-              <Badge className="mb-4 bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200">
-                A Safe Place to Begin Your Healing Journey
-              </Badge>
-              <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-                You Are Not Alone.{" "}
-                <span className="text-teal-700">Hope Lives Here.</span>
-              </h1>
-              <p className="mt-6 text-lg leading-8 text-slate-700 max-w-2xl">
-                At the Kennedy Austin Foundation, we believe in the power of compassion and community.
-                Whether you&apos;re facing crisis, loss, or simply seeking support,
-                we&apos;re here to walk alongside you with free services and open hearts.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Button asChild size="lg" className="shadow-warm hover-lift">
-                  <Link href="/services">
-                    <Heart className="mr-2 h-4 w-4" />
-                    Find Support
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="hover-lift">
-                  <Link href="/classes">
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Explore Classes
-                  </Link>
-                </Button>
-              </div>
-              <div className="mt-8 p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-teal-200 inline-flex items-center gap-3 shadow-warm">
-                <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
-                  <Phone className="h-5 w-5 text-teal-700" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">Need to talk? Our crisis line is always open:</p>
-                  <a href="tel:909-808-6866" className="font-semibold text-teal-700 hover:underline text-lg">
-                    909-808-6866
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Decorative elements */}
-          <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-1/4 w-48 h-48 bg-amber-200/30 rounded-full blur-3xl" />
-        </section>
+        <HeroSlider slides={slides} />
 
         {/* Stats Section - Warm tones */}
         <section className="py-16 bg-white">
@@ -205,16 +171,33 @@ export default function HomePage() {
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {services.map((service) => (
-                <Card key={service.title} className="group hover:shadow-warm-lg transition-all duration-300 hover-lift border border-slate-100 shadow-warm bg-white">
+              {(homepageServices
+                ? homepageServices.map((s) => ({
+                    title: s.title,
+                    description: s.short_description || "",
+                    href: s.href_anchor ? `/services#${s.href_anchor}` : "/services",
+                    icon: getIcon(s.icon_name),
+                    color: s.color_class || "text-teal-700",
+                    bgColor: s.bg_color_class || "bg-teal-50",
+                  }))
+                : services
+              ).map((service) => (
+                <Card
+                  key={service.title}
+                  className="group hover:shadow-warm-lg transition-all duration-300 hover-lift border border-slate-100 shadow-warm bg-white"
+                >
                   <CardHeader>
-                    <div className={`w-14 h-14 rounded-xl ${service.bgColor} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                    <div
+                      className={`w-14 h-14 rounded-xl ${service.bgColor} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
+                    >
                       <service.icon className={`h-7 w-7 ${service.color}`} />
                     </div>
                     <CardTitle className="group-hover:text-teal-700 transition-colors text-xl text-slate-900">
                       {service.title}
                     </CardTitle>
-                    <CardDescription className="text-base text-slate-600">{service.description}</CardDescription>
+                    <CardDescription className="text-base text-slate-600">
+                      {service.description}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Link
@@ -285,6 +268,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <UpcomingEvents events={upcomingEvents} />
 
         {/* Upcoming Classes Section */}
         <section className="py-16 sm:py-24 bg-white">
@@ -422,7 +407,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <Footer />
+      <SiteFooter />
     </div>
   )
 }
