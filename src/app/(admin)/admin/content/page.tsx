@@ -96,39 +96,48 @@ export default function AdminContentPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map((s) => {
-          const Wrapper = s.ready ? Link : "div"
-          return (
-            <Wrapper
-              key={s.title}
-              {...(s.ready ? { href: s.href } : {})}
-              className={
-                s.ready
-                  ? "group block rounded-lg border bg-background hover:border-teal-300 hover:shadow-sm transition"
-                  : "block rounded-lg border bg-background opacity-70"
-              }
-            >
-              <Card className="border-0 shadow-none bg-transparent">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50">
-                      <s.icon className="h-5 w-5 text-teal-700" />
-                    </div>
-                    {!s.ready && (
-                      <Badge variant="secondary" className="text-xs">
-                        Coming soon
-                      </Badge>
-                    )}
+          const inner = (
+            <Card className="border-0 shadow-none bg-transparent">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50">
+                    <s.icon className="h-5 w-5 text-teal-700" />
                   </div>
-                  <CardTitle className="text-lg flex items-center gap-1">
-                    {s.title}
-                    {s.ready && (
-                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-teal-700 group-hover:translate-x-0.5 transition" />
-                    )}
-                  </CardTitle>
-                  <CardDescription>{s.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            </Wrapper>
+                  {!s.ready && (
+                    <Badge variant="secondary" className="text-xs">
+                      Coming soon
+                    </Badge>
+                  )}
+                </div>
+                <CardTitle className="text-lg flex items-center gap-1">
+                  {s.title}
+                  {s.ready && (
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-teal-700 group-hover:translate-x-0.5 transition" />
+                  )}
+                </CardTitle>
+                <CardDescription>{s.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          )
+
+          if (s.ready) {
+            return (
+              <Link
+                key={s.title}
+                href={s.href}
+                className="group block rounded-lg border bg-background hover:border-teal-300 hover:shadow-sm transition"
+              >
+                {inner}
+              </Link>
+            )
+          }
+          return (
+            <div
+              key={s.title}
+              className="block rounded-lg border bg-background opacity-70"
+            >
+              {inner}
+            </div>
           )
         })}
       </div>
