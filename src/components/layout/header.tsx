@@ -55,10 +55,7 @@ export function Header({ user, settings = DEFAULT_SITE_SETTINGS }: HeaderProps =
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const siteName = settings.site_name || "Kennedy Austin Foundation"
-  const nameParts = siteName.split(/\s+/)
-  const nameLine1 =
-    nameParts.slice(0, Math.max(1, nameParts.length - 1)).join(" ") || siteName
-  const nameLine2 = nameParts.length > 1 ? nameParts[nameParts.length - 1] : ""
+  const tagline = settings.site_tagline
 
   const phone = settings.primary_phone
   const crisis = settings.crisis_line
@@ -105,10 +102,12 @@ export function Header({ user, settings = DEFAULT_SITE_SETTINGS }: HeaderProps =
               <Heart className="h-5 w-5 text-white" />
             </div>
           )}
-          <div className="hidden sm:block">
-            <span className="text-lg font-bold text-slate-900">{nameLine1}</span>
-            {nameLine2 && (
-              <span className="block text-xs text-slate-600">{nameLine2}</span>
+          <div className="hidden sm:block leading-tight">
+            <span className="text-lg font-bold text-slate-900 whitespace-nowrap">
+              {siteName}
+            </span>
+            {tagline && (
+              <span className="block text-xs text-slate-600">{tagline}</span>
             )}
           </div>
         </Link>

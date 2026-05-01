@@ -43,9 +43,7 @@ const footerLinks = {
 export function Footer({ settings = DEFAULT_SITE_SETTINGS }: FooterProps = {}) {
 
   const siteName = settings.site_name || "Kennedy Austin Foundation"
-  const nameParts = siteName.split(/\s+/)
-  const nameLine1 = nameParts.slice(0, Math.max(1, nameParts.length - 1)).join(" ") || siteName
-  const nameLine2 = nameParts.length > 1 ? nameParts[nameParts.length - 1] : ""
+  const tagline = settings.site_tagline
 
   const socialLinks = [
     { name: "Facebook", href: settings.facebook_url, icon: Facebook },
@@ -99,10 +97,12 @@ export function Footer({ settings = DEFAULT_SITE_SETTINGS }: FooterProps = {}) {
                   <Heart className="h-5 w-5 text-white" />
                 </div>
               )}
-              <div>
-                <span className="text-lg font-bold text-slate-900">{nameLine1}</span>
-                {nameLine2 && (
-                  <span className="block text-xs text-slate-600">{nameLine2}</span>
+              <div className="leading-tight">
+                <span className="text-lg font-bold text-slate-900 whitespace-nowrap">
+                  {siteName}
+                </span>
+                {tagline && (
+                  <span className="block text-xs text-slate-600">{tagline}</span>
                 )}
               </div>
             </Link>
