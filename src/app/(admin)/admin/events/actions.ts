@@ -4,7 +4,19 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
-type EventInput = {
+const REGISTRATION_TYPES = ["none", "rsvp", "volunteer", "toy_request"] as const
+type RegistrationType = (typeof REGISTRATION_TYPES)[number]
+
+const REGISTRATION_STATUSES = [
+  "pending",
+  "approved",
+  "confirmed",
+  "waitlist",
+  "canceled",
+] as const
+type RegistrationStatus = (typeof REGISTRATION_STATUSES)[number]
+
+interface EventInput {
   title: string
   description: string
   date: string
@@ -12,6 +24,10 @@ type EventInput = {
   image_url: string
   registration_required: boolean
   max_attendees: number | null
+  event_type: string
+  registration_type: RegistrationType
+  registration_deadline: string | null
+  is_published: boolean
 }
 
 function nullable(v: string) {
@@ -33,6 +49,19 @@ function parseFormData(formData: FormData): EventInput | { error: string } {
   if (max !== null && (!Number.isFinite(max) || max < 0))
     return { error: "Max attendees must be a non-negative integer" }
 
+  const regTypeRaw = (formData.get("registration_type") || "none").toString().trim()
+  if (!(REGISTRATION_TYPES as readonly string[]).includes(regTypeRaw))
+    return { error: "Invalid registration type" }
+  const registration_type = regTypeRaw as RegistrationType
+
+  const deadlineRaw = (formData.get("registration_deadline") || "").toString().trim()
+  let registration_deadline: string | null = null
+  if (deadlineRaw) {
+    const d = new Date(deadlineRaw)
+    if (isNaN(d.getTime())) return { error: "Invalid registration deadline" }
+    registration_deadline = d.toISOString()
+  }
+
   return {
     title,
     description: (formData.get("description") || "").toString().trim(),
@@ -40,9 +69,16 @@ function parseFormData(formData: FormData): EventInput | { error: string } {
     location: (formData.get("location") || "").toString().trim(),
     image_url: (formData.get("image_url") || "").toString().trim(),
     registration_required:
+      registration_type !== "none" ||
       formData.get("registration_required") === "on" ||
       formData.get("registration_required") === "true",
     max_attendees: max,
+    event_type: (formData.get("event_type") || "general").toString().trim() || "general",
+    registration_type,
+    registration_deadline,
+    is_published:
+      formData.get("is_published") === "on" ||
+      formData.get("is_published") === "true",
   }
 }
 
@@ -55,6 +91,10 @@ function toRow(input: EventInput) {
     image_url: nullable(input.image_url),
     registration_required: input.registration_required,
     max_attendees: input.max_attendees,
+    event_type: input.event_type,
+    registration_type: input.registration_type,
+    registration_deadline: input.registration_deadline,
+    is_published: input.is_published,
   }
 }
 
@@ -105,5 +145,37 @@ export async function deleteEventAction(id: string) {
   revalidatePath("/admin/events")
   revalidatePath("/events")
   revalidatePath("/")
+  return { ok: true }
+}
+
+export async function setRegistrationStatusAction(
+  registrationId: string,
+  status: string,
+  eventId: string
+) {
+  if (!(REGISTRATION_STATUSES as readonly string[]).includes(status)) {
+    return { error: "Invalid status" }
+  }
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("event_registrations")
+    .update({ status: status as RegistrationStatus })
+    .eq("id", registrationId)
+  if (error) return { error: error.message }
+  revalidatePath(`/admin/events/${eventId}/registrations`)
+  return { ok: true }
+}
+
+export async function deleteRegistrationAction(
+  registrationId: string,
+  eventId: string
+) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("event_registrations")
+    .delete()
+    .eq("id", registrationId)
+  if (error) return { error: error.message }
+  revalidatePath(`/admin/events/${eventId}/registrations`)
   return { ok: true }
 }

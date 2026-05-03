@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ListChecks } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,29 +12,66 @@ import { Switch } from "@/components/ui/switch"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { FileUpload } from "@/components/admin/file-upload"
 import type { Event } from "@/types"
+import {
+  EVENT_TYPE_LABELS,
+  REGISTRATION_TYPE_LABELS,
+  type RegistrationType,
+} from "@/types/events"
 import { createEventAction, updateEventAction } from "./actions"
 
 interface EventFormProps {
-  eventData?: Event
+  eventData?: Event & {
+    event_type?: string
+    registration_type?: RegistrationType
+    registration_deadline?: string | null
+    is_published?: boolean
+  }
 }
 
-function toLocalInputValue(iso: string) {
-  // datetime-local needs `YYYY-MM-DDTHH:MM`
+function toLocalInputValue(iso: string | null | undefined) {
+  if (!iso) return ""
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ""
   const pad = (n: number) => String(n).padStart(2, "0")
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+const EVENT_TYPE_OPTIONS = Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => ({
+  value,
+  label,
+}))
+
+const REGISTRATION_TYPE_OPTIONS = Object.entries(REGISTRATION_TYPE_LABELS).map(
+  ([value, label]) => ({ value: value as RegistrationType, label })
+)
+
 export function EventForm({ eventData }: EventFormProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  const [eventType, setEventType] = useState<string>(
+    eventData?.event_type || "general"
+  )
+  const [registrationType, setRegistrationType] = useState<RegistrationType>(
+    eventData?.registration_type || "none"
+  )
+  const [imageUrl, setImageUrl] = useState(eventData?.image_url || "")
+  const [published, setPublished] = useState(eventData?.is_published ?? true)
   const [registrationRequired, setRegistrationRequired] = useState(
     eventData?.registration_required ?? false
   )
@@ -44,7 +81,14 @@ export function EventForm({ eventData }: EventFormProps) {
   const handleSubmit = (formData: FormData) => {
     setError(null)
     setSuccess(false)
-    formData.set("registration_required", registrationRequired ? "true" : "false")
+    formData.set("event_type", eventType)
+    formData.set("registration_type", registrationType)
+    formData.set("image_url", imageUrl)
+    formData.set("is_published", published ? "true" : "false")
+    formData.set(
+      "registration_required",
+      registrationType !== "none" || registrationRequired ? "true" : "false"
+    )
 
     startTransition(async () => {
       const result = isEdit
@@ -73,13 +117,24 @@ export function EventForm({ eventData }: EventFormProps) {
           <ArrowLeft className="h-3 w-3 mr-1" />
           All events
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {isEdit ? "Edit event" : "Create event"}
-        </h1>
-        <p className="text-muted-foreground">
-          Events appear on the public /events page and the homepage Upcoming Events
-          strip (next 3 by date).
-        </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {isEdit ? "Edit event" : "Create event"}
+            </h1>
+            <p className="text-muted-foreground">
+              Public events appear on /events and the homepage upcoming strip.
+            </p>
+          </div>
+          {isEdit && (
+            <Button asChild type="button" variant="outline" size="sm">
+              <Link href={`/admin/events/${eventData!.id}/registrations`}>
+                <ListChecks className="h-4 w-4 mr-2" />
+                Registrations
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -96,8 +151,41 @@ export function EventForm({ eventData }: EventFormProps) {
               name="title"
               required
               defaultValue={eventData?.title || ""}
-              placeholder="Annual Wellness Workshop"
+              placeholder="Annual Toy Drive"
             />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label>Event type</Label>
+              <Select value={eventType} onValueChange={setEventType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVENT_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Used as a filter chip on the public /events page.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="date">
+                Date &amp; time <span className="text-rose-600">*</span>
+              </Label>
+              <Input
+                id="date"
+                name="date"
+                type="datetime-local"
+                required
+                defaultValue={toLocalInputValue(eventData?.date)}
+              />
+            </div>
           </div>
 
           <div>
@@ -107,26 +195,8 @@ export function EventForm({ eventData }: EventFormProps) {
               name="description"
               rows={4}
               defaultValue={eventData?.description || ""}
-              placeholder="What attendees will experience."
+              placeholder="What attendees will experience and how they can help."
             />
-          </div>
-
-          <div>
-            <Label htmlFor="date">
-              Date &amp; time <span className="text-rose-600">*</span>
-            </Label>
-            <Input
-              id="date"
-              name="date"
-              type="datetime-local"
-              required
-              defaultValue={
-                eventData?.date ? toLocalInputValue(eventData.date) : ""
-              }
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Times use your local timezone.
-            </p>
           </div>
 
           <div>
@@ -140,13 +210,13 @@ export function EventForm({ eventData }: EventFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="image_url">Image URL</Label>
-            <Input
-              id="image_url"
-              name="image_url"
-              type="url"
-              defaultValue={eventData?.image_url || ""}
-              placeholder="https://..."
+            <Label>Cover image</Label>
+            <FileUpload
+              value={imageUrl}
+              onChange={setImageUrl}
+              folder="events"
+              accept="image"
+              previewClassName="h-40"
             />
           </div>
         </CardContent>
@@ -154,35 +224,108 @@ export function EventForm({ eventData }: EventFormProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Registration</CardTitle>
+          <CardTitle className="text-lg">Registration / sign-up sheet</CardTitle>
+          <CardDescription>
+            Pick a registration mode and the public event page will show the
+            matching sign-up form. Submissions land in the event&apos;s
+            Registrations tab.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={registrationRequired}
-              onCheckedChange={setRegistrationRequired}
-            />
+          <div>
+            <Label>Registration type</Label>
+            <Select
+              value={registrationType}
+              onValueChange={(v) => setRegistrationType(v as RegistrationType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {REGISTRATION_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              <strong>None</strong> shows just &quot;Learn More&quot;.{" "}
+              <strong>RSVP</strong> captures attendee + guest count.{" "}
+              <strong>Volunteer</strong> captures contact + notes.{" "}
+              <strong>Toy request</strong> captures parent contact + a list of
+              children (name, age) — at least one child is required.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="font-medium text-sm">
-                Registration required
+              <Label htmlFor="registration_deadline">
+                Registration deadline (optional)
+              </Label>
+              <Input
+                id="registration_deadline"
+                name="registration_deadline"
+                type="datetime-local"
+                defaultValue={toLocalInputValue(eventData?.registration_deadline)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Form is hidden after this time. Leave blank to allow signups
+                until the event date.
               </p>
-              <p className="text-xs text-muted-foreground">
-                {registrationRequired
-                  ? "Public CTA reads 'Register'."
-                  : "Public CTA reads 'Learn More'."}
+            </div>
+            <div>
+              <Label htmlFor="max_attendees">Max attendees</Label>
+              <Input
+                id="max_attendees"
+                name="max_attendees"
+                type="number"
+                min={0}
+                defaultValue={eventData?.max_attendees ?? ""}
+                placeholder="Leave blank for unlimited"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Once reached, new signups go to the waitlist (admin still sees
+                them).
               </p>
             </div>
           </div>
-          <div>
-            <Label htmlFor="max_attendees">Max attendees</Label>
-            <Input
-              id="max_attendees"
-              name="max_attendees"
-              type="number"
-              min={0}
-              defaultValue={eventData?.max_attendees ?? ""}
-              placeholder="Leave blank for unlimited"
-            />
+
+          {registrationType === "none" && (
+            <div className="flex items-center gap-3 pt-1">
+              <Switch
+                checked={registrationRequired}
+                onCheckedChange={setRegistrationRequired}
+              />
+              <div>
+                <p className="text-sm font-medium">CTA labelled as &quot;Register&quot;</p>
+                <p className="text-xs text-muted-foreground">
+                  Display only — visitors are pointed at /contact for offline
+                  signup.
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <Switch checked={published} onCheckedChange={setPublished} />
+            <div>
+              <p className="font-medium text-sm">
+                {published ? "Published" : "Draft"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {published
+                  ? "Visible on /events and the homepage."
+                  : "Hidden from the public site."}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
