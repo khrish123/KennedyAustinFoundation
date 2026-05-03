@@ -7,6 +7,7 @@ export interface ServiceItem {
   icon_name: string | null
   color_class: string | null
   bg_color_class: string | null
+  image_url: string | null
   features: string[] | null
   href_anchor: string | null
   order_index: number

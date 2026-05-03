@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { IconPicker } from "@/components/admin/icon-picker"
+import { FileUpload } from "@/components/admin/file-upload"
 import type { ServiceItem } from "@/types/cms"
 import { createServiceAction, updateServiceAction } from "./actions"
 
@@ -43,6 +44,7 @@ export function ServiceForm({ service }: ServiceFormProps) {
   const [icon, setIcon] = useState(service?.icon_name || "")
   const [colorClass, setColorClass] = useState(service?.color_class || "text-teal-700")
   const [bgClass, setBgClass] = useState(service?.bg_color_class || "bg-teal-50")
+  const [imageUrl, setImageUrl] = useState(service?.image_url || "")
   const [published, setPublished] = useState(service?.is_published ?? true)
 
   const isEdit = !!service
@@ -60,6 +62,7 @@ export function ServiceForm({ service }: ServiceFormProps) {
     formData.set("icon_name", icon)
     formData.set("color_class", colorClass)
     formData.set("bg_color_class", bgClass)
+    formData.set("image_url", imageUrl)
     formData.set("is_published", published ? "true" : "false")
 
     startTransition(async () => {
@@ -174,10 +177,26 @@ export function ServiceForm({ service }: ServiceFormProps) {
         <CardHeader>
           <CardTitle className="text-lg">Visual</CardTitle>
           <CardDescription>
-            Pick an icon and color preset. Custom Tailwind classes also work.
+            Optional photo, plus an icon + color preset used as a fallback and
+            on the small homepage cards.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div>
+            <Label>Photo (optional)</Label>
+            <FileUpload
+              value={imageUrl}
+              onChange={setImageUrl}
+              folder="services"
+              accept="image"
+              previewClassName="h-40"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Shown on the /services detail block. If omitted, the icon below is
+              used instead.
+            </p>
+          </div>
+
           <div>
             <Label>Icon</Label>
             <IconPicker value={icon} onChange={setIcon} />

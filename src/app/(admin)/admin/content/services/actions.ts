@@ -12,6 +12,7 @@ interface ServiceInput {
   icon_name: string
   color_class: string
   bg_color_class: string
+  image_url: string
   features: string[]
   href_anchor: string
   order_index: number
@@ -58,6 +59,7 @@ function parseFormData(formData: FormData): ServiceInput | { error: string } {
     icon_name: (formData.get("icon_name") || "").toString().trim(),
     color_class: (formData.get("color_class") || "").toString().trim(),
     bg_color_class: (formData.get("bg_color_class") || "").toString().trim(),
+    image_url: (formData.get("image_url") || "").toString().trim(),
     features,
     href_anchor: (formData.get("href_anchor") || "").toString().trim(),
     order_index: Number.isFinite(order) ? order : 0,
@@ -76,6 +78,7 @@ function toRow(input: ServiceInput) {
     icon_name: nullable(input.icon_name),
     color_class: nullable(input.color_class),
     bg_color_class: nullable(input.bg_color_class),
+    image_url: nullable(input.image_url),
     features: input.features.length ? input.features : null,
     href_anchor: nullable(input.href_anchor) || input.slug,
     order_index: input.order_index,

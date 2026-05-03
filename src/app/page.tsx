@@ -179,13 +179,22 @@ export default async function HomePage() {
                     icon: getIcon(s.icon_name),
                     color: s.color_class || "text-teal-700",
                     bgColor: s.bg_color_class || "bg-teal-50",
+                    imageUrl: s.image_url,
                   }))
-                : services
+                : services.map((s) => ({ ...s, imageUrl: null as string | null }))
               ).map((service) => (
                 <Card
                   key={service.title}
-                  className="group hover:shadow-warm-lg transition-all duration-300 hover-lift border border-slate-100 shadow-warm bg-white"
+                  className="group hover:shadow-warm-lg transition-all duration-300 hover-lift border border-slate-100 shadow-warm bg-white overflow-hidden"
                 >
+                  {service.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={service.imageUrl}
+                      alt=""
+                      className="h-40 w-full object-cover"
+                    />
+                  )}
                   <CardHeader>
                     <div
                       className={`w-14 h-14 rounded-xl ${service.bgColor} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}

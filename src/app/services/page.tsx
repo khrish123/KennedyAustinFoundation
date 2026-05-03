@@ -144,9 +144,18 @@ export default async function ServicesPage() {
                       </div>
                       <div className={index % 2 === 1 ? "lg:col-start-1" : ""}>
                         <Card className="overflow-hidden">
-                          <div className={`h-64 ${bg} flex items-center justify-center`}>
-                            <Icon className={`h-24 w-24 ${color} opacity-50`} />
-                          </div>
+                          {service.image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={service.image_url}
+                              alt={service.title}
+                              className="h-64 w-full object-cover"
+                            />
+                          ) : (
+                            <div className={`h-64 ${bg} flex items-center justify-center`}>
+                              <Icon className={`h-24 w-24 ${color} opacity-50`} />
+                            </div>
+                          )}
                         </Card>
                       </div>
                     </div>
