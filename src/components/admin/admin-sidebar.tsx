@@ -84,15 +84,11 @@ const navigation: NavItem[] = [
     name: "Campaigns",
     href: "/admin/campaigns",
     icon: Mail,
-    badge: "Soon",
-    comingSoon: true,
   },
   {
     name: "Media Library",
     href: "/admin/media",
     icon: ImageIcon,
-    badge: "Soon",
-    comingSoon: true,
   },
   {
     name: "Donations",
@@ -108,8 +104,6 @@ const navigation: NavItem[] = [
     name: "Analytics",
     href: "/admin/analytics",
     icon: BarChart3,
-    badge: "Soon",
-    comingSoon: true,
   },
   {
     name: "Settings",

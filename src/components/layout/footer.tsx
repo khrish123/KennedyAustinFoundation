@@ -1,9 +1,8 @@
 import Link from "next/link"
 import { Heart, Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { DEFAULT_SITE_SETTINGS, type SiteSettings } from "@/types/settings"
+import { NewsletterForm } from "./newsletter-form"
 
 interface FooterProps {
   settings?: SiteSettings
@@ -66,20 +65,7 @@ export function Footer({ settings = DEFAULT_SITE_SETTINGS }: FooterProps = {}) {
                 <h3 className="text-lg font-semibold text-white">Stay Connected</h3>
                 <p className="text-sm text-white/95">{settings.newsletter_blurb}</p>
               </div>
-              <form className="flex w-full max-w-md gap-2">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="bg-white border-white text-slate-900 placeholder:text-slate-500"
-                />
-                <Button
-                  variant="secondary"
-                  type="submit"
-                  className="bg-white text-teal-700 hover:bg-slate-100 shadow-warm font-semibold"
-                >
-                  Subscribe
-                </Button>
-              </form>
+              <NewsletterForm />
             </div>
           </div>
         </div>
