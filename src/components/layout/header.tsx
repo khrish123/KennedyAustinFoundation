@@ -46,6 +46,7 @@ const navigation = [
   { name: "Services", href: "/services" },
   { name: "ECM", href: "/ecm" },
   { name: "Classes", href: "/classes" },
+  { name: "Events", href: "/events" },
   { name: "Resources", href: "/resources" },
   { name: "Community", href: "/community" },
   { name: "Contact", href: "/contact" },
