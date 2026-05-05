@@ -1,28 +1,48 @@
-import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/server"
 import type { EmailSettings, EmailSettingsForAdmin } from "@/types/email"
 
 /**
  * Load email settings for the email helper to actually send a message.
- * RLS on email_settings is admin-only, so this uses the service-role
- * client to bypass RLS — needed for non-admin contexts like newsletter
- * signup, contact form, event registration, and account welcome emails.
+ * RLS on email_settings is admin-only, so this uses a plain Supabase
+ * client (no cookies) initialized with the service-role key to
+ * guarantee RLS bypass.
  *
- * Falls back to the regular cookie client if the service key is missing,
- * which still works when called from an admin-authenticated session
- * (e.g. the "Send test email" button).
+ * Why not the @supabase/ssr server client? Even when initialized with
+ * the service-role key, the SSR client merges in auth cookies, which
+ * can override the apikey for queries and re-enable RLS. The plain
+ * client has no cookie context, so the service role is always used.
+ *
+ * Falls back to the cookie-bound client if the service key is missing
+ * (so the admin "Send test email" still works in dev).
  */
 export async function getEmailSettings(): Promise<EmailSettings | null> {
   try {
-    const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? await createServiceClient()
-      : await createClient()
-    const { data, error } = await supabase
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (url && serviceKey) {
+      const admin = createSupabaseAdminClient(url, serviceKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      const { data, error } = await admin
+        .from("email_settings")
+        .select("*")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (error || !data) return null
+      return data as EmailSettings
+    }
+
+    // Fallback: cookie-bound server client (only works in admin sessions)
+    const cookieClient = await createClient()
+    const { data, error } = await cookieClient
       .from("email_settings")
       .select("*")
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle()
-
     if (error || !data) return null
     return data as EmailSettings
   } catch {
