@@ -27,8 +27,14 @@ export async function POST(request: Request) {
   const siteName = settings.site_name || "Kennedy Austin Foundation"
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || ""
 
+  console.log("[welcome] starting", {
+    to: email,
+    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    hasResendEnvKey: !!process.env.RESEND_API_KEY,
+  })
+
   // Welcome email to the new user
-  await sendTransactionalEmail({
+  const userResult = await sendTransactionalEmail({
     to: email,
     subject: `Welcome to ${siteName}`,
     text:
@@ -40,12 +46,14 @@ export async function POST(request: Request) {
       `— ${siteName}\n` +
       (settings.primary_phone ? `Crisis line: ${settings.primary_phone}\n` : ""),
   })
+  console.log("[welcome] user email result", userResult)
 
   // Admin notification
   const adminTo =
     process.env.EMAIL_NOTIFICATIONS_TO || settings.primary_email
+  let adminResult: unknown = { skipped: "no admin recipient" }
   if (adminTo) {
-    await sendTransactionalEmail({
+    adminResult = await sendTransactionalEmail({
       to: adminTo,
       subject: `[${siteName}] New account: ${email}`,
       text:
@@ -54,6 +62,13 @@ export async function POST(request: Request) {
         (appUrl ? `\nManage users: ${appUrl}/admin/users\n` : ""),
     })
   }
+  console.log("[welcome] admin email result", { adminTo, adminResult })
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({
+    ok: true,
+    debug: {
+      userEmail: userResult,
+      adminEmail: { to: adminTo, result: adminResult },
+    },
+  })
 }
