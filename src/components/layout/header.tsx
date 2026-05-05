@@ -93,8 +93,8 @@ export function Header({ user, settings = DEFAULT_SITE_SETTINGS }: HeaderProps =
         </div>
       )}
 
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 p-4 lg:px-8">
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
           {settings.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={settings.logo_url} alt={siteName} className="h-10 w-auto" />
@@ -104,32 +104,34 @@ export function Header({ user, settings = DEFAULT_SITE_SETTINGS }: HeaderProps =
             </div>
           )}
           <div className="hidden sm:block leading-tight">
-            <span className="text-lg font-bold text-slate-900 whitespace-nowrap">
+            <span className="text-base xl:text-lg font-bold text-slate-900 whitespace-nowrap">
               {siteName}
             </span>
             {tagline && (
-              <span className="block text-xs text-slate-600">{tagline}</span>
+              <span className="hidden xl:block text-xs text-slate-600">
+                {tagline}
+              </span>
             )}
           </div>
         </Link>
 
-        <div className="hidden lg:flex lg:gap-x-6">
+        <div className="hidden xl:flex xl:gap-x-5">
           {navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
-              className="text-sm font-semibold text-slate-700 transition-colors hover:text-teal-700"
+              className="text-sm font-semibold text-slate-700 transition-colors hover:text-teal-700 whitespace-nowrap"
             >
               {item.name}
             </Link>
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button asChild variant="default" size="sm" className="hidden sm:inline-flex">
             <Link href="/donate">
-              <Heart className="mr-2 h-4 w-4" />
-              Donate
+              <Heart className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Donate</span>
             </Link>
           </Button>
 
@@ -218,7 +220,7 @@ export function Header({ user, settings = DEFAULT_SITE_SETTINGS }: HeaderProps =
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="xl:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -226,7 +228,7 @@ export function Header({ user, settings = DEFAULT_SITE_SETTINGS }: HeaderProps =
         </div>
       </nav>
 
-      <div className={cn("lg:hidden", mobileMenuOpen ? "block" : "hidden")}>
+      <div className={cn("xl:hidden", mobileMenuOpen ? "block" : "hidden")}>
         <div className="space-y-1 px-4 pb-4 bg-white border-t border-slate-100">
           {navigation.map((item) => (
             <Link

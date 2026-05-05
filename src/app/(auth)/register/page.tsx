@@ -78,9 +78,22 @@ export default function RegisterPage() {
         return
       }
 
+      // Best-effort: branded welcome email to the new user + admin notification.
+      // Failures here don't block registration.
+      try {
+        await fetch("/api/auth/welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, full_name: fullName }),
+        })
+      } catch {
+        // Ignore — Supabase still sent its confirmation email.
+      }
+
       toast({
-        title: "Check your email",
-        description: "We've sent you a confirmation link to complete your registration.",
+        title: "Welcome aboard!",
+        description:
+          "Check your inbox for a welcome email. If your project requires email confirmation, click the link inside to finish.",
       })
 
       router.push("/login?message=check-email")
