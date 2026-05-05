@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Calendar, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -102,14 +102,34 @@ export function ClassForm({ classData, instructors }: ClassFormProps) {
           <ArrowLeft className="h-3 w-3 mr-1" />
           All classes
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {isEdit ? "Edit class" : "Create class"}
-        </h1>
-        <p className="text-muted-foreground">
-          {isEdit
-            ? "Update class details. Toggle Published when you're ready to make it public."
-            : "Fill in the details. The class is created as a draft — you can publish later."}
-        </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {isEdit ? "Edit class" : "Create class"}
+            </h1>
+            <p className="text-muted-foreground">
+              {isEdit
+                ? "Update class details. Toggle Published when you're ready to make it public."
+                : "Fill in the details. The class is created as a draft — you can publish later."}
+            </p>
+          </div>
+          {isEdit && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button asChild type="button" variant="outline" size="sm">
+                <Link href={`/admin/classes/${classData!.id}/sessions`}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Sessions
+                </Link>
+              </Button>
+              <Button asChild type="button" variant="outline" size="sm">
+                <Link href={`/admin/classes/${classData!.id}/attendance`}>
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Attendance report
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <Card>
