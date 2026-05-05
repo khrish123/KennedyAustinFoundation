@@ -28,7 +28,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-900 mb-3">Acceptance of Terms</h2>
             <p>
-              By creating an account or using kennedyaustinfoundation.org, you agree to these terms.
+              By creating an account or using kennedyaustinfoundation.com, you agree to these terms.
               If you do not agree, please do not use the service.
             </p>
           </section>

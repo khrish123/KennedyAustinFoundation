@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://kennedyaustinfoundation.org",
+    url: "https://kennedyaustinfoundation.com",
     siteName: "Kennedy Austin Foundation",
     title: "Kennedy Austin Foundation | Crisis Intervention & Family Support",
     description:

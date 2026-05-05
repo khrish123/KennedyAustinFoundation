@@ -224,7 +224,7 @@ export function CampaignForm({
                 name="cta_url"
                 type="url"
                 defaultValue={initialContent.cta_url || ""}
-                placeholder="https://kennedyaustinfoundation.org/classes"
+                placeholder="https://kennedyaustinfoundation.com/classes"
                 disabled={!isDraft}
               />
             </div>
