@@ -1,15 +1,21 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createServiceClient } from "@/lib/supabase/server"
 import type { EmailSettings, EmailSettingsForAdmin } from "@/types/email"
 
 /**
  * Load email settings for the email helper to actually send a message.
- * RLS only allows admin access; this function is intended to be called from
- * server actions / API routes acting on behalf of an authenticated admin,
- * OR from server-side code that uses the service-role client.
+ * RLS on email_settings is admin-only, so this uses the service-role
+ * client to bypass RLS — needed for non-admin contexts like newsletter
+ * signup, contact form, event registration, and account welcome emails.
+ *
+ * Falls back to the regular cookie client if the service key is missing,
+ * which still works when called from an admin-authenticated session
+ * (e.g. the "Send test email" button).
  */
 export async function getEmailSettings(): Promise<EmailSettings | null> {
   try {
-    const supabase = await createClient()
+    const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? await createServiceClient()
+      : await createClient()
     const { data, error } = await supabase
       .from("email_settings")
       .select("*")
