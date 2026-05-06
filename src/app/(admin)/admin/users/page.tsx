@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import {
-  Users, Search, Mail,
+  Users, Search,
   ChevronLeft, ChevronRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { RoleControl } from "./role-control"
+import { InviteUserDialog } from "./invite-user-dialog"
 
 export const metadata: Metadata = {
   title: "User Management | Admin",
@@ -91,10 +92,7 @@ export default async function AdminUsersPage() {
             Manage users, roles, and permissions
           </p>
         </div>
-        <Button>
-          <Mail className="mr-2 h-4 w-4" />
-          Invite User
-        </Button>
+        <InviteUserDialog viewerRole={viewerRole} />
       </div>
 
       {/* Stats */}
