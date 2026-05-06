@@ -58,12 +58,19 @@ export async function changeUserRoleAction(
     return { error: "Only a super_admin can change another super_admin's role" }
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("profiles")
     .update({ role })
     .eq("id", userId)
+    .select("id")
 
   if (error) return { error: error.message }
+  if (!updated || updated.length === 0) {
+    return {
+      error:
+        "Update was blocked by row-level security. Apply migration 015_admin_update_profiles.sql in Supabase.",
+    }
+  }
 
   revalidatePath("/admin/users")
   return { ok: true }
