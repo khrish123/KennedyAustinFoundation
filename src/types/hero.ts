@@ -12,6 +12,13 @@ export interface HeroSlide {
   is_active: boolean
   created_at: string
   updated_at: string
+  /** Runtime-only (not a DB column): overrides the default hero badge text. */
+  eyebrow?: string | null
+  /**
+   * Runtime-only (not a DB column): "contain" keeps a whole flyer visible
+   * instead of cropping it to fill the hero. Used by event-derived slides.
+   */
+  image_fit?: "cover" | "contain"
 }
 
 export const DEFAULT_HERO_SLIDES: HeroSlide[] = [

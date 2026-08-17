@@ -136,11 +136,19 @@ export default async function AdminEventsPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {isPast ? (
-                          <Badge variant="secondary">Past</Badge>
-                        ) : (
-                          <Badge className="bg-emerald-500">Upcoming</Badge>
-                        )}
+                        <div className="flex flex-wrap gap-1">
+                          {isPast ? (
+                            <Badge variant="secondary">Past</Badge>
+                          ) : (
+                            <Badge className="bg-emerald-500">Upcoming</Badge>
+                          )}
+                          {event.is_published === false && (
+                            <Badge variant="outline">Draft</Badge>
+                          )}
+                          {event.featured_on_home && !isPast && (
+                            <Badge className="bg-amber-500">Hero</Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <EventRowActions id={event.id} title={event.title} />

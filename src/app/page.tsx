@@ -21,7 +21,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { HeroSlider } from "@/components/home/hero-slider"
 import { UpcomingEvents } from "@/components/home/upcoming-events"
-import { getActiveHeroSlides, getUpcomingEvents } from "@/lib/queries/home"
+import {
+  getActiveHeroSlides,
+  getFeaturedEventSlides,
+  getUpcomingEvents,
+} from "@/lib/queries/home"
 import { getPublishedServices } from "@/lib/queries/cms"
 import { getIcon } from "@/lib/icon-registry"
 
@@ -108,12 +112,15 @@ const upcomingClasses = [
 ]
 
 export default async function HomePage() {
-  const [slides, upcomingEvents, dbServices] = await Promise.all([
+  const [slides, eventSlides, upcomingEvents, dbServices] = await Promise.all([
     getActiveHeroSlides(),
+    getFeaturedEventSlides(),
     getUpcomingEvents(3),
     getPublishedServices(),
   ])
 
+  // Featured events lead the hero, then the evergreen slides.
+  const heroSlides = [...eventSlides, ...slides]
   const homepageServices = dbServices.length > 0 ? dbServices : null
 
   return (
@@ -121,7 +128,7 @@ export default async function HomePage() {
       <SiteHeader />
 
       <main className="flex-1">
-        <HeroSlider slides={slides} />
+        <HeroSlider slides={heroSlides} />
 
         {/* Stats Section - Warm tones */}
         <section className="py-16 bg-white">

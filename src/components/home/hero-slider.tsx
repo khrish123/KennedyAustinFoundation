@@ -40,6 +40,12 @@ export function HeroSlider({
 
   if (total === 0) return null
 
+  const current = slides[index]
+  // Flyer-style slides show the artwork whole beside the copy instead of
+  // cropping it to fill the hero.
+  const showsFlyer =
+    current.image_fit === "contain" && !!current.background_image_url
+
   return (
     <section
       className="relative overflow-hidden gradient-sunrise min-h-[640px]"
@@ -54,27 +60,49 @@ export function HeroSlider({
 
       {/* Foreground content (uses the active slide) */}
       <div className="relative z-20 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-        <div className="max-w-3xl">
-          <Badge className="mb-4 bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200">
-            A Safe Place to Begin Your Healing Journey
-          </Badge>
-          <SlideText slide={slides[index]} />
+        <div
+          className={cn(
+            showsFlyer
+              ? "grid gap-10 lg:grid-cols-2 lg:items-center"
+              : "max-w-3xl"
+          )}
+        >
+          <div>
+            <Badge className="mb-4 bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200">
+              {current.eyebrow || "A Safe Place to Begin Your Healing Journey"}
+            </Badge>
+            <SlideText slide={current} />
 
-          {showCrisisLine && (
-            <div className="mt-8 p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-teal-200 inline-flex items-center gap-3 shadow-warm">
-              <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
-                <Phone className="h-5 w-5 text-teal-700" />
+            {showCrisisLine && !showsFlyer && (
+              <div className="mt-8 p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-teal-200 inline-flex items-center gap-3 shadow-warm">
+                <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
+                  <Phone className="h-5 w-5 text-teal-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Need to talk? Our crisis line is always open:</p>
+                  <a
+                    href="tel:909-808-6866"
+                    className="font-semibold text-teal-700 hover:underline text-lg"
+                  >
+                    909-808-6866
+                  </a>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-slate-600">Need to talk? Our crisis line is always open:</p>
-                <a
-                  href="tel:909-808-6866"
-                  className="font-semibold text-teal-700 hover:underline text-lg"
-                >
-                  909-808-6866
-                </a>
-              </div>
-            </div>
+            )}
+          </div>
+
+          {showsFlyer && (
+            <Link
+              href={current.primary_cta_url || "/events"}
+              className="block rounded-2xl overflow-hidden bg-white/90 shadow-warm-lg ring-1 ring-white/60 hover-lift"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={current.background_image_url!}
+                alt={current.title}
+                className="w-full max-h-[26rem] object-contain"
+              />
+            </Link>
           )}
         </div>
       </div>
@@ -126,6 +154,30 @@ export function HeroSlider({
 
 function Slide({ slide, active }: { slide: HeroSlide; active: boolean }) {
   const hasMedia = !!(slide.background_video_url || slide.background_image_url)
+  const isFlyer = slide.image_fit === "contain" && !!slide.background_image_url
+
+  // Flyer slides render the artwork in the foreground; back here we only blur a
+  // copy of it into a soft, tinted backdrop.
+  if (isFlyer) {
+    return (
+      <div
+        className={cn(
+          "absolute inset-0 transition-opacity duration-700 ease-in-out",
+          active ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        aria-hidden
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={slide.background_image_url!}
+          alt=""
+          className="h-full w-full object-cover scale-110 blur-2xl"
+        />
+        <div className="absolute inset-0 bg-white/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/60" />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -176,7 +228,7 @@ function SlideText({ slide }: { slide: HeroSlide }) {
         {slide.title}
       </h1>
       {slide.subtitle && (
-        <p className="mt-6 text-lg leading-8 text-slate-700 max-w-2xl">
+        <p className="mt-6 text-lg leading-8 text-slate-700 max-w-2xl whitespace-pre-line line-clamp-6">
           {slide.subtitle}
         </p>
       )}

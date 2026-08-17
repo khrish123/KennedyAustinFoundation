@@ -38,6 +38,7 @@ interface EventFormProps {
     registration_type?: RegistrationType
     registration_deadline?: string | null
     is_published?: boolean
+    featured_on_home?: boolean
   }
 }
 
@@ -72,6 +73,9 @@ export function EventForm({ eventData }: EventFormProps) {
   )
   const [imageUrl, setImageUrl] = useState(eventData?.image_url || "")
   const [published, setPublished] = useState(eventData?.is_published ?? true)
+  const [featuredOnHome, setFeaturedOnHome] = useState(
+    eventData?.featured_on_home ?? false
+  )
   const [registrationRequired, setRegistrationRequired] = useState(
     eventData?.registration_required ?? false
   )
@@ -85,6 +89,10 @@ export function EventForm({ eventData }: EventFormProps) {
     formData.set("registration_type", registrationType)
     formData.set("image_url", imageUrl)
     formData.set("is_published", published ? "true" : "false")
+    formData.set(
+      "featured_on_home",
+      published && featuredOnHome ? "true" : "false"
+    )
     formData.set(
       "registration_required",
       registrationType !== "none" || registrationRequired ? "true" : "false"
@@ -313,7 +321,7 @@ export function EventForm({ eventData }: EventFormProps) {
         <CardHeader>
           <CardTitle className="text-lg">Status</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
             <Switch checked={published} onCheckedChange={setPublished} />
             <div>
@@ -324,6 +332,22 @@ export function EventForm({ eventData }: EventFormProps) {
                 {published
                   ? "Visible on /events and the homepage."
                   : "Hidden from the public site."}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 border-t pt-4">
+            <Switch
+              checked={published && featuredOnHome}
+              disabled={!published}
+              onCheckedChange={setFeaturedOnHome}
+            />
+            <div>
+              <p className="font-medium text-sm">Feature in the homepage hero</p>
+              <p className="text-xs text-muted-foreground">
+                {published
+                  ? "Adds this event as a slide at the front of the homepage hero slider, using its cover image. The slide disappears on its own once the event date passes."
+                  : "Publish the event first to feature it."}
               </p>
             </div>
           </div>

@@ -38,6 +38,7 @@ export interface EventRecord {
   registration_type: RegistrationType
   registration_deadline: string | null
   is_published: boolean
+  featured_on_home: boolean
   created_at: string
 }
 

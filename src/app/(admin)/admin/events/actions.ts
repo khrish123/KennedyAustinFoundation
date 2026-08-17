@@ -28,6 +28,7 @@ interface EventInput {
   registration_type: RegistrationType
   registration_deadline: string | null
   is_published: boolean
+  featured_on_home: boolean
 }
 
 function nullable(v: string) {
@@ -49,6 +50,9 @@ function parseFormData(formData: FormData): EventInput | { error: string } {
   if (max !== null && (!Number.isFinite(max) || max < 0))
     return { error: "Max attendees must be a non-negative integer" }
 
+  const bool = (name: string) =>
+    formData.get(name) === "on" || formData.get(name) === "true"
+
   const regTypeRaw = (formData.get("registration_type") || "none").toString().trim()
   if (!(REGISTRATION_TYPES as readonly string[]).includes(regTypeRaw))
     return { error: "Invalid registration type" }
@@ -62,6 +66,8 @@ function parseFormData(formData: FormData): EventInput | { error: string } {
     registration_deadline = d.toISOString()
   }
 
+  const is_published = bool("is_published")
+
   return {
     title,
     description: (formData.get("description") || "").toString().trim(),
@@ -69,16 +75,14 @@ function parseFormData(formData: FormData): EventInput | { error: string } {
     location: (formData.get("location") || "").toString().trim(),
     image_url: (formData.get("image_url") || "").toString().trim(),
     registration_required:
-      registration_type !== "none" ||
-      formData.get("registration_required") === "on" ||
-      formData.get("registration_required") === "true",
+      registration_type !== "none" || bool("registration_required"),
     max_attendees: max,
     event_type: (formData.get("event_type") || "general").toString().trim() || "general",
     registration_type,
     registration_deadline,
-    is_published:
-      formData.get("is_published") === "on" ||
-      formData.get("is_published") === "true",
+    is_published,
+    // A draft can never sit in the homepage hero.
+    featured_on_home: is_published && bool("featured_on_home"),
   }
 }
 
@@ -95,6 +99,7 @@ function toRow(input: EventInput) {
     registration_type: input.registration_type,
     registration_deadline: input.registration_deadline,
     is_published: input.is_published,
+    featured_on_home: input.featured_on_home,
   }
 }
 

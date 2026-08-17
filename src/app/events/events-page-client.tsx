@@ -43,14 +43,24 @@ function EventCard({ event }: { event: EventRecord }) {
     <Link href={`/events/${event.id}`} className="block group">
       <Card className="h-full overflow-hidden hover:shadow-warm-lg transition-all duration-300 hover-lift border border-slate-100 shadow-warm bg-white">
         {event.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={event.image_url}
-            alt=""
-            className="h-40 w-full object-cover"
-          />
+          // Flyers carry the details, so show the whole image instead of cropping it.
+          <div className="relative h-56 w-full overflow-hidden bg-slate-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={event.image_url}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full object-cover scale-110 blur-xl opacity-60"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={event.image_url}
+              alt=""
+              className="relative h-full w-full object-contain"
+            />
+          </div>
         ) : (
-          <div className="h-40 w-full bg-gradient-to-br from-teal-100 via-amber-100 to-rose-100 flex items-center justify-center">
+          <div className="h-56 w-full bg-gradient-to-br from-teal-100 via-amber-100 to-rose-100 flex items-center justify-center">
             <Calendar className="h-10 w-10 text-teal-700" />
           </div>
         )}
