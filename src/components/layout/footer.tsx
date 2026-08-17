@@ -212,6 +212,17 @@ export function Footer({ settings = DEFAULT_SITE_SETTINGS }: FooterProps = {}) {
 
           <div className="text-sm text-slate-600 text-center md:text-right">
             <p>{copyright}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Site designed &amp; developed by{" "}
+              <a
+                href="https://obieggroup.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-slate-600 hover:text-teal-700 transition-colors"
+              >
+                ObieG Group
+              </a>
+            </p>
             <div className="flex items-center justify-center md:justify-end gap-4 mt-2">
               <Link href="/privacy" className="hover:text-teal-700">
                 Privacy Policy
