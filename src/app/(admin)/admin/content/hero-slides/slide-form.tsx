@@ -8,7 +8,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { FileUpload } from "@/components/admin/file-upload"
-import type { HeroSlide } from "@/types/hero"
+import {
+  HERO_BACKGROUND_PRESETS,
+  HERO_IMAGE_POSITIONS,
+  normalizeHexColor,
+  type HeroImagePosition,
+  type HeroSlide,
+} from "@/types/hero"
 import { createSlideAction, updateSlideAction } from "./actions"
 
 interface SlideFormProps {
@@ -29,6 +35,12 @@ export function SlideForm({ slide, onDone }: SlideFormProps) {
   const [allowDownload, setAllowDownload] = useState(
     slide?.allow_download ?? false
   )
+  const [imagePosition, setImagePosition] = useState<HeroImagePosition>(
+    slide?.image_position || "right"
+  )
+  const [bgColor, setBgColor] = useState(
+    normalizeHexColor(slide?.background_color) || ""
+  )
 
   const handleSubmit = (formData: FormData) => {
     setError(null)
@@ -37,6 +49,8 @@ export function SlideForm({ slide, onDone }: SlideFormProps) {
     formData.set("background_video_url", videoUrl)
     formData.set("image_fit", showWholeImage ? "contain" : "cover")
     formData.set("allow_download", allowDownload ? "true" : "false")
+    formData.set("image_position", imagePosition)
+    formData.set("background_color", bgColor)
 
     startTransition(async () => {
       const result = slide
@@ -105,6 +119,56 @@ export function SlideForm({ slide, onDone }: SlideFormProps) {
         </div>
       </div>
 
+      <div className="rounded-lg border bg-slate-50/60 p-4 space-y-4">
+        <div>
+          <Label className="mb-2 block">Background color</Label>
+          <div className="flex flex-wrap items-center gap-2">
+            {HERO_BACKGROUND_PRESETS.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                title={preset.label}
+                aria-label={preset.label}
+                onClick={() => setBgColor(preset.value)}
+                className={
+                  bgColor === preset.value
+                    ? "h-8 w-8 rounded-full border-2 border-slate-900 ring-2 ring-offset-1 ring-slate-300"
+                    : "h-8 w-8 rounded-full border border-slate-300 hover:scale-110 transition"
+                }
+                style={{ backgroundColor: preset.value }}
+              />
+            ))}
+            <input
+              type="color"
+              value={bgColor || "#f8fafc"}
+              onChange={(e) => setBgColor(e.target.value)}
+              aria-label="Custom background color"
+              className="h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5"
+            />
+            <Input
+              value={bgColor}
+              onChange={(e) => setBgColor(e.target.value)}
+              placeholder="#f8fafc"
+              className="h-8 w-28 font-mono text-xs"
+            />
+            {bgColor && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setBgColor("")}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Painted behind the slide. Leave empty for the default sunrise
+            gradient. Dark colors flip the headline to white automatically.
+          </p>
+        </div>
+      </div>
+
       {imageUrl && (
         <div className="rounded-lg border bg-slate-50/60 p-4 space-y-4">
           <div className="flex items-start gap-3">
@@ -122,6 +186,33 @@ export function SlideForm({ slide, onDone }: SlideFormProps) {
               </p>
             </div>
           </div>
+
+          {showWholeImage && (
+            <div className="border-t pt-4">
+              <Label className="mb-2 block">Image placement</Label>
+              <div className="flex flex-wrap gap-2">
+                {HERO_IMAGE_POSITIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setImagePosition(opt.value)}
+                    className={
+                      imagePosition === opt.value
+                        ? "rounded-full px-3 py-1.5 text-xs font-medium bg-slate-900 text-white"
+                        : "rounded-full px-3 py-1.5 text-xs font-medium border bg-white text-slate-700 hover:border-teal-300"
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                The image is sized from its own proportions to fill as much of
+                the hero as it can — tall posters get height, wide banners get
+                width.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-start gap-3 border-t pt-4">
             <Switch checked={allowDownload} onCheckedChange={setAllowDownload} />

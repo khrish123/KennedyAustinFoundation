@@ -6,7 +6,11 @@ import { ChevronLeft, ChevronRight, Download, Heart, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { HeroSlide } from "@/types/hero"
+import {
+  isDarkColor,
+  normalizeHexColor,
+  type HeroSlide,
+} from "@/types/hero"
 
 interface HeroSliderProps {
   slides: HeroSlide[]
@@ -46,9 +50,18 @@ export function HeroSlider({
   const showsFlyer =
     current.image_fit === "contain" && !!current.background_image_url
 
+  const bgColor = normalizeHexColor(current.background_color)
+  const onDark = !!bgColor && isDarkColor(bgColor)
+  const position = current.image_position || "right"
+  const centered = showsFlyer && position === "center"
+
   return (
     <section
-      className="relative overflow-hidden gradient-sunrise min-h-[640px]"
+      className={cn(
+        "relative overflow-hidden min-h-[640px] transition-colors duration-700",
+        !bgColor && "gradient-sunrise"
+      )}
+      style={bgColor ? { backgroundColor: bgColor } : undefined}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"
@@ -59,19 +72,27 @@ export function HeroSlider({
       ))}
 
       {/* Foreground content (uses the active slide) */}
-      <div className="relative z-20 mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <div
+        className={cn(
+          "relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8",
+          // Flyer slides run tighter so the artwork gets the vertical room.
+          showsFlyer ? "py-12 lg:py-16" : "py-20 lg:py-28"
+        )}
+      >
         <div
           className={cn(
             showsFlyer
-              ? "grid gap-10 lg:grid-cols-2 lg:items-center"
+              ? centered
+                ? "flex flex-col items-center text-center gap-8"
+                : "grid gap-10 lg:items-center lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
               : "max-w-3xl"
           )}
         >
-          <div>
+          <div className={cn(centered && "max-w-3xl", position === "left" && "lg:order-2")}>
             <Badge className="mb-4 bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200">
               {current.eyebrow || "A Safe Place to Begin Your Healing Journey"}
             </Badge>
-            <SlideText slide={current} />
+            <SlideText slide={current} onDark={onDark} centered={centered} />
 
             {showCrisisLine && !showsFlyer && (
               <div className="mt-8 p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-teal-200 inline-flex items-center gap-3 shadow-warm">
@@ -92,8 +113,18 @@ export function HeroSlider({
           </div>
 
           {showsFlyer && (
-            <div className="space-y-3">
-              <FlyerImage slide={current} />
+            <div
+              className={cn(
+                "space-y-3 w-full",
+                centered && "max-w-5xl",
+                position === "left" && "lg:order-1"
+              )}
+            >
+              <FlyerImage
+                key={current.id}
+                slide={current}
+                centered={centered}
+              />
               {current.allow_download && (
                 <div className="flex justify-center">
                   <Button asChild size="sm" variant="secondary">
@@ -170,17 +201,48 @@ function downloadHref(slide: HeroSlide) {
   return slide.download_url || `/api/hero-slides/${slide.id}/image`
 }
 
-/** The flyer itself: whole, unfaded, and linked to the slide's CTA if it has one. */
-function FlyerImage({ slide }: { slide: HeroSlide }) {
-  const frame =
-    "block rounded-2xl overflow-hidden bg-white shadow-warm-lg ring-1 ring-white/60"
+/**
+ * The flyer itself: whole, unfaded, and sized from its own aspect ratio so it
+ * fills as much of the hero as it can. A tall poster gets height; a wide
+ * banner gets width. Measured on load rather than guessed.
+ */
+function FlyerImage({
+  slide,
+  centered,
+}: {
+  slide: HeroSlide
+  centered: boolean
+}) {
+  const [ratio, setRatio] = useState<number | null>(null)
+
+  // Portrait art is height-bound, landscape art is width-bound. Before the
+  // image reports its size we use the balanced cap, so nothing jumps far.
+  const heightCap =
+    ratio === null
+      ? "max-h-[32rem]"
+      : ratio < 0.85
+        ? centered
+          ? "max-h-[40rem]"
+          : "max-h-[38rem]"
+        : ratio > 1.4
+          ? "max-h-[28rem]"
+          : "max-h-[34rem]"
+
+  const frame = cn(
+    "block rounded-2xl overflow-hidden bg-white shadow-warm-lg ring-1 ring-white/60",
+    centered && "mx-auto"
+  )
 
   /* eslint-disable @next/next/no-img-element */
   const image = (
     <img
       src={slide.background_image_url!}
       alt={slide.title}
-      className="w-full max-h-[30rem] object-contain"
+      onLoad={(e) => {
+        const el = e.currentTarget
+        if (el.naturalHeight > 0) setRatio(el.naturalWidth / el.naturalHeight)
+      }}
+      className={cn("w-full object-contain", heightCap)}
     />
   )
   /* eslint-enable @next/next/no-img-element */
@@ -200,8 +262,10 @@ function Slide({ slide, active }: { slide: HeroSlide; active: boolean }) {
   const isFlyer = slide.image_fit === "contain" && !!slide.background_image_url
 
   // Flyer slides render the artwork in the foreground; back here we only blur a
-  // copy of it into a soft, tinted backdrop.
+  // copy of it into a soft, tinted backdrop. A chosen background color replaces
+  // that backdrop entirely — it is painted on the section itself.
   if (isFlyer) {
+    if (normalizeHexColor(slide.background_color)) return null
     return (
       <div
         className={cn(
@@ -262,22 +326,46 @@ function Slide({ slide, active }: { slide: HeroSlide; active: boolean }) {
   )
 }
 
-function SlideText({ slide }: { slide: HeroSlide }) {
+function SlideText({
+  slide,
+  onDark,
+  centered,
+}: {
+  slide: HeroSlide
+  onDark: boolean
+  centered: boolean
+}) {
   const primaryHasCta = !!(slide.primary_cta_text && slide.primary_cta_url)
   const secondaryHasCta = !!(slide.secondary_cta_text && slide.secondary_cta_url)
 
   return (
     <>
-      <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+      <h1
+        className={cn(
+          "text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl",
+          onDark ? "text-white" : "text-slate-900"
+        )}
+      >
         {slide.title}
       </h1>
       {slide.subtitle && (
-        <p className="mt-6 text-lg leading-8 text-slate-700 max-w-2xl whitespace-pre-line line-clamp-6">
+        <p
+          className={cn(
+            "mt-6 text-lg leading-8 max-w-2xl whitespace-pre-line line-clamp-6",
+            onDark ? "text-white/90" : "text-slate-700",
+            centered && "mx-auto"
+          )}
+        >
           {slide.subtitle}
         </p>
       )}
       {(primaryHasCta || secondaryHasCta) && (
-        <div className="mt-8 flex flex-wrap gap-4">
+        <div
+          className={cn(
+            "mt-8 flex flex-wrap gap-4",
+            centered && "justify-center"
+          )}
+        >
           {primaryHasCta && (
             <Button asChild size="lg" className="shadow-warm hover-lift">
               <Link href={slide.primary_cta_url!}>
@@ -287,7 +375,15 @@ function SlideText({ slide }: { slide: HeroSlide }) {
             </Button>
           )}
           {secondaryHasCta && (
-            <Button asChild size="lg" variant="outline" className="hover-lift">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className={cn(
+                "hover-lift",
+                onDark && "bg-transparent text-white border-white/40 hover:bg-white/10 hover:text-white"
+              )}
+            >
               <Link href={slide.secondary_cta_url!}>{slide.secondary_cta_text}</Link>
             </Button>
           )}

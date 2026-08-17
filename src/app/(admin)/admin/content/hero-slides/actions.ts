@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { normalizeHexColor, type HeroImagePosition } from "@/types/hero"
 
 type SlideInput = {
   title: string
@@ -16,7 +17,11 @@ type SlideInput = {
   is_active: boolean
   image_fit: "cover" | "contain"
   allow_download: boolean
+  image_position: HeroImagePosition
+  background_color: string | null
 }
+
+const IMAGE_POSITIONS: HeroImagePosition[] = ["left", "right", "center"]
 
 function parseFormData(formData: FormData): SlideInput {
   const orderRaw = formData.get("order_index")
@@ -36,6 +41,16 @@ function parseFormData(formData: FormData): SlideInput {
     allow_download:
       formData.get("allow_download") === "on" ||
       formData.get("allow_download") === "true",
+    image_position: IMAGE_POSITIONS.includes(
+      (formData.get("image_position") || "").toString() as HeroImagePosition
+    )
+      ? ((formData.get("image_position") || "").toString() as HeroImagePosition)
+      : "right",
+    // Anything that is not a plain hex is dropped rather than written into
+    // an inline style.
+    background_color: normalizeHexColor(
+      (formData.get("background_color") || "").toString()
+    ),
   }
 }
 
@@ -53,6 +68,8 @@ function toRow(input: SlideInput) {
     is_active: input.is_active,
     image_fit: input.image_fit,
     allow_download: input.allow_download,
+    image_position: input.image_position,
+    background_color: input.background_color,
   }
 }
 
