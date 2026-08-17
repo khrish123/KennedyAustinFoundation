@@ -23,12 +23,20 @@ export function SlideForm({ slide, onDone }: SlideFormProps) {
   const [active, setActive] = useState(slide?.is_active ?? true)
   const [imageUrl, setImageUrl] = useState(slide?.background_image_url || "")
   const [videoUrl, setVideoUrl] = useState(slide?.background_video_url || "")
+  const [showWholeImage, setShowWholeImage] = useState(
+    slide?.image_fit === "contain"
+  )
+  const [allowDownload, setAllowDownload] = useState(
+    slide?.allow_download ?? false
+  )
 
   const handleSubmit = (formData: FormData) => {
     setError(null)
     formData.set("is_active", active ? "true" : "false")
     formData.set("background_image_url", imageUrl)
     formData.set("background_video_url", videoUrl)
+    formData.set("image_fit", showWholeImage ? "contain" : "cover")
+    formData.set("allow_download", allowDownload ? "true" : "false")
 
     startTransition(async () => {
       const result = slide
@@ -96,6 +104,39 @@ export function SlideForm({ slide, onDone }: SlideFormProps) {
           </p>
         </div>
       </div>
+
+      {imageUrl && (
+        <div className="rounded-lg border bg-slate-50/60 p-4 space-y-4">
+          <div className="flex items-start gap-3">
+            <Switch
+              checked={showWholeImage}
+              onCheckedChange={setShowWholeImage}
+            />
+            <div>
+              <p className="text-sm font-medium">Show the whole image</p>
+              <p className="text-xs text-muted-foreground">
+                Turn this on for flyers and posters with text in them: the
+                image sits beside the headline at full height with nothing
+                cropped or faded. Leave it off for wide photos that should
+                fill the hero behind the text.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 border-t pt-4">
+            <Switch checked={allowDownload} onCheckedChange={setAllowDownload} />
+            <div>
+              <p className="text-sm font-medium">
+                Let visitors download this image
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Adds a &quot;Download image&quot; button to the slide so people
+                can save the flyer and share it.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

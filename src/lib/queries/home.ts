@@ -94,6 +94,9 @@ export async function getFeaturedEventSlides(limit = 3): Promise<HeroSlide[]> {
         updated_at: event.created_at,
         eyebrow: "Upcoming Event",
         image_fit: "contain" as const,
+        allow_download:
+          !!event.image_url && event.allow_flyer_download !== false,
+        download_url: `/api/events/${event.id}/flyer`,
       }
     })
   } catch {

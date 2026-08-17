@@ -14,6 +14,8 @@ type SlideInput = {
   secondary_cta_url: string
   order_index: number
   is_active: boolean
+  image_fit: "cover" | "contain"
+  allow_download: boolean
 }
 
 function parseFormData(formData: FormData): SlideInput {
@@ -30,6 +32,10 @@ function parseFormData(formData: FormData): SlideInput {
     secondary_cta_url: (formData.get("secondary_cta_url") || "").toString().trim(),
     order_index: Number.isFinite(order) ? order : 0,
     is_active: formData.get("is_active") === "on" || formData.get("is_active") === "true",
+    image_fit: formData.get("image_fit") === "contain" ? "contain" : "cover",
+    allow_download:
+      formData.get("allow_download") === "on" ||
+      formData.get("allow_download") === "true",
   }
 }
 
@@ -45,6 +51,8 @@ function toRow(input: SlideInput) {
     secondary_cta_url: input.secondary_cta_url || null,
     order_index: input.order_index,
     is_active: input.is_active,
+    image_fit: input.image_fit,
+    allow_download: input.allow_download,
   }
 }
 

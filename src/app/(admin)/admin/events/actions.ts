@@ -29,6 +29,7 @@ interface EventInput {
   registration_deadline: string | null
   is_published: boolean
   featured_on_home: boolean
+  allow_flyer_download: boolean
 }
 
 function nullable(v: string) {
@@ -83,6 +84,7 @@ function parseFormData(formData: FormData): EventInput | { error: string } {
     is_published,
     // A draft can never sit in the homepage hero.
     featured_on_home: is_published && bool("featured_on_home"),
+    allow_flyer_download: bool("allow_flyer_download"),
   }
 }
 
@@ -100,6 +102,7 @@ function toRow(input: EventInput) {
     registration_deadline: input.registration_deadline,
     is_published: input.is_published,
     featured_on_home: input.featured_on_home,
+    allow_flyer_download: input.allow_flyer_download,
   }
 }
 

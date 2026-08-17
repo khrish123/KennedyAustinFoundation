@@ -12,13 +12,17 @@ export interface HeroSlide {
   is_active: boolean
   created_at: string
   updated_at: string
-  /** Runtime-only (not a DB column): overrides the default hero badge text. */
-  eyebrow?: string | null
   /**
-   * Runtime-only (not a DB column): "contain" keeps a whole flyer visible
-   * instead of cropping it to fill the hero. Used by event-derived slides.
+   * "contain" shows a whole flyer/poster beside the copy instead of cropping
+   * it to fill the hero band.
    */
   image_fit?: "cover" | "contain"
+  /** Offers visitors a download button for the slide image. */
+  allow_download?: boolean
+  /** Runtime-only (not a DB column): overrides the default hero badge text. */
+  eyebrow?: string | null
+  /** Runtime-only (not a DB column): where a download button should point. */
+  download_url?: string | null
 }
 
 export const DEFAULT_HERO_SLIDES: HeroSlide[] = [

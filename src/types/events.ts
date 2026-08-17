@@ -39,6 +39,7 @@ export interface EventRecord {
   registration_deadline: string | null
   is_published: boolean
   featured_on_home: boolean
+  allow_flyer_download: boolean
   created_at: string
 }
 

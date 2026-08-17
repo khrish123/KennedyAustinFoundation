@@ -135,12 +135,14 @@ export default async function EventDetailPage({ params }: PageProps) {
                 />
               </a>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                <Button asChild size="sm" variant="secondary">
-                  <a href={`/api/events/${event.id}/flyer`} download>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download flyer
-                  </a>
-                </Button>
+                {event.allow_flyer_download !== false && (
+                  <Button asChild size="sm" variant="secondary">
+                    <a href={`/api/events/${event.id}/flyer`} download>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download flyer
+                    </a>
+                  </Button>
+                )}
                 <Button asChild size="sm" variant="outline">
                   <a
                     href={event.image_url}

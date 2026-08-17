@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Heart, Phone } from "lucide-react"
+import { ChevronLeft, ChevronRight, Download, Heart, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -92,19 +92,33 @@ export function HeroSlider({
           </div>
 
           {showsFlyer && (
-            <Link
-              href={current.primary_cta_url || "/events"}
-              className="block rounded-2xl overflow-hidden bg-white/90 shadow-warm-lg ring-1 ring-white/60 hover-lift"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={current.background_image_url!}
-                alt={current.title}
-                className="w-full max-h-[26rem] object-contain"
-              />
-            </Link>
+            <div className="space-y-3">
+              <FlyerImage slide={current} />
+              {current.allow_download && (
+                <div className="flex justify-center">
+                  <Button asChild size="sm" variant="secondary">
+                    <a href={downloadHref(current)} download>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download image
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </div>
+
+        {/* Cover-fit slides keep the download button under the copy */}
+        {!showsFlyer && current.allow_download && current.background_image_url && (
+          <div className="mt-6">
+            <Button asChild size="sm" variant="secondary">
+              <a href={downloadHref(current)} download>
+                <Download className="h-4 w-4 mr-2" />
+                Download image
+              </a>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Decorative blobs (keep the existing warm aesthetic) */}
@@ -152,6 +166,35 @@ export function HeroSlider({
   )
 }
 
+function downloadHref(slide: HeroSlide) {
+  return slide.download_url || `/api/hero-slides/${slide.id}/image`
+}
+
+/** The flyer itself: whole, unfaded, and linked to the slide's CTA if it has one. */
+function FlyerImage({ slide }: { slide: HeroSlide }) {
+  const frame =
+    "block rounded-2xl overflow-hidden bg-white shadow-warm-lg ring-1 ring-white/60"
+
+  /* eslint-disable @next/next/no-img-element */
+  const image = (
+    <img
+      src={slide.background_image_url!}
+      alt={slide.title}
+      className="w-full max-h-[30rem] object-contain"
+    />
+  )
+  /* eslint-enable @next/next/no-img-element */
+
+  if (slide.primary_cta_url) {
+    return (
+      <Link href={slide.primary_cta_url} className={cn(frame, "hover-lift")}>
+        {image}
+      </Link>
+    )
+  }
+  return <div className={frame}>{image}</div>
+}
+
 function Slide({ slide, active }: { slide: HeroSlide; active: boolean }) {
   const hasMedia = !!(slide.background_video_url || slide.background_image_url)
   const isFlyer = slide.image_fit === "contain" && !!slide.background_image_url
@@ -173,8 +216,8 @@ function Slide({ slide, active }: { slide: HeroSlide; active: boolean }) {
           alt=""
           className="h-full w-full object-cover scale-110 blur-2xl"
         />
-        <div className="absolute inset-0 bg-white/70" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/60" />
+        <div className="absolute inset-0 bg-white/75" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/25" />
       </div>
     )
   }
@@ -207,13 +250,14 @@ function Slide({ slide, active }: { slide: HeroSlide; active: boolean }) {
         />
       ) : null}
 
-      {/* Readability overlay only when we have media */}
+      {/* Readability scrim: strong only behind the copy on the left, so the
+          right side of the photo stays vivid instead of washing out. */}
       {hasMedia && (
-        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-white/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/45 to-transparent" />
       )}
 
       {/* Soft fade-out at the bottom (matches the original hero) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/25" />
     </div>
   )
 }

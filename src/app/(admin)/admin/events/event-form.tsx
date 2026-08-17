@@ -39,6 +39,7 @@ interface EventFormProps {
     registration_deadline?: string | null
     is_published?: boolean
     featured_on_home?: boolean
+    allow_flyer_download?: boolean
   }
 }
 
@@ -76,6 +77,9 @@ export function EventForm({ eventData }: EventFormProps) {
   const [featuredOnHome, setFeaturedOnHome] = useState(
     eventData?.featured_on_home ?? false
   )
+  const [allowFlyerDownload, setAllowFlyerDownload] = useState(
+    eventData?.allow_flyer_download ?? true
+  )
   const [registrationRequired, setRegistrationRequired] = useState(
     eventData?.registration_required ?? false
   )
@@ -93,6 +97,7 @@ export function EventForm({ eventData }: EventFormProps) {
       "featured_on_home",
       published && featuredOnHome ? "true" : "false"
     )
+    formData.set("allow_flyer_download", allowFlyerDownload ? "true" : "false")
     formData.set(
       "registration_required",
       registrationType !== "none" || registrationRequired ? "true" : "false"
@@ -226,6 +231,27 @@ export function EventForm({ eventData }: EventFormProps) {
               accept="image"
               previewClassName="h-40"
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Shown whole (never cropped) on the event page and cards, so a
+              flyer stays readable.
+            </p>
+            {imageUrl && (
+              <div className="mt-3 flex items-start gap-3 rounded-lg border bg-slate-50/60 p-3">
+                <Switch
+                  checked={allowFlyerDownload}
+                  onCheckedChange={setAllowFlyerDownload}
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Let visitors download this image
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Adds a &quot;Download flyer&quot; button to the event page
+                    so people can save and share it.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
